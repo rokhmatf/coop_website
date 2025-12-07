@@ -1159,5 +1159,86 @@ def manage_deadline_reminder(request):
         'all_deadlines': all_deadlines,
         **stats  # Spread the stats dictionary
     }
-    
+
     return render(request, 'coops/manage_deadline_reminder.html', context)
+
+@login_required
+def get_notifications(request):
+    """Get notifications for the current user"""
+    from django.http import JsonResponse
+    from .models import Notification
+
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:10]
+
+    notifications_data = []
+    for notif in notifications:
+        notifications_data.append({
+            'id': notif.id,
+            'title': notif.title,
+            'message': notif.message,
+            'type': notif.notification_type,
+            'is_read': notif.is_read,
+            'link': notif.link or '',
+            'created_at': notif.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        })
+
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+
+    return JsonResponse({
+        'notifications': notifications_data,
+        'unread_count': unread_count,
+    })
+
+@login_required
+def mark_notification_read(request, notification_id):
+    """Mark a notification as read"""
+    from django.http import JsonResponse
+    from .models import Notification
+
+    try:
+        notification = Notification.objects.get(id=notification_id, user=request.user)
+        notification.is_read = True
+        notification.save()
+        return JsonResponse({'success': True})
+    except Notification.DoesNotExist:
+        return JsonResponse({'error': 'Notification not found'}, status=404)
+
+@login_required
+def mark_all_notifications_read(request):
+    """Mark all notifications as read"""
+    from django.http import JsonResponse
+    from .models import Notification
+
+    if request.method == 'POST':
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def download_sertifikat(request, sertifikat_id):
+    """Download certificate as PDF"""
+    from django.http import FileResponse
+    from .models import SertifikatCoop
+    from .certificate_generator import CertificateGenerator
+
+    try:
+        sertifikat = SertifikatCoop.objects.get(id=sertifikat_id)
+
+        if request.user.role == 'mahasiswa' and sertifikat.konfirmasi.mahasiswa != request.user:
+            messages.error(request, "Anda tidak memiliki akses ke sertifikat ini.")
+            return redirect('coops:mahasiswa_dashboard')
+
+        generator = CertificateGenerator(sertifikat)
+        pdf_buffer = generator.generate_pdf()
+
+        filename = f"Sertifikat_COOP_{sertifikat.nomor_sertifikat.replace('/', '_')}.pdf"
+
+        response = FileResponse(pdf_buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        return response
+
+    except SertifikatCoop.DoesNotExist:
+        messages.error(request, "Sertifikat tidak ditemukan.")
+        return redirect('coops:mahasiswa_dashboard')

@@ -8,7 +8,27 @@ from accounts.models import User
 
 @login_required
 def lowongan(request):
-    return render(request, "jobs/list_lowongan.html")
+    """Display all active job postings"""
+    from .models import JobPosting, JobApplication
+
+    job_postings = JobPosting.objects.filter(
+        is_active=True,
+        application_deadline__gte=timezone.now().date()
+    ).order_by('-posted_date')
+
+    # Check if current user has applied to each job
+    if request.user.role == 'mahasiswa':
+        applied_jobs = JobApplication.objects.filter(
+            mahasiswa=request.user
+        ).values_list('job_id', flat=True)
+    else:
+        applied_jobs = []
+
+    context = {
+        'job_postings': job_postings,
+        'applied_jobs': applied_jobs,
+    }
+    return render(request, "jobs/list_lowongan.html", context)
 
 @login_required
 def profile(request):
@@ -310,3 +330,259 @@ def selesai_konfirmasi(request, konfirmasi_id):
 
     messages.success(request, "Konfirmasi magang berhasil diselesaikan.")
     return redirect('jobs:supervisor_dashboard')
+
+@login_required
+def job_detail(request, job_id):
+    """View job posting details"""
+    from .models import JobPosting, JobApplication
+
+    job = get_object_or_404(JobPosting, id=job_id)
+    has_applied = False
+    application = None
+
+    if request.user.role == 'mahasiswa':
+        try:
+            application = JobApplication.objects.get(job=job, mahasiswa=request.user)
+            has_applied = True
+        except JobApplication.DoesNotExist:
+            pass
+
+    context = {
+        'job': job,
+        'has_applied': has_applied,
+        'application': application,
+    }
+    return render(request, "jobs/job_detail.html", context)
+
+@login_required
+def apply_to_job(request, job_id):
+    """Apply to a job posting"""
+    from .models import JobPosting, JobApplication
+    from accounts.models import Mahasiswa
+
+    if request.user.role != 'mahasiswa':
+        messages.error(request, "Hanya mahasiswa yang dapat melamar pekerjaan.")
+        return redirect('jobs:lowongan')
+
+    job = get_object_or_404(JobPosting, id=job_id, is_active=True)
+
+    # Check if already applied
+    if JobApplication.objects.filter(job=job, mahasiswa=request.user).exists():
+        messages.warning(request, "Anda sudah melamar pekerjaan ini.")
+        return redirect('jobs:job_detail', job_id=job_id)
+
+    # Check if job deadline has passed
+    if job.is_expired:
+        messages.error(request, "Lowongan ini sudah ditutup.")
+        return redirect('jobs:job_detail', job_id=job_id)
+
+    if request.method == 'POST':
+        cv_url = request.POST.get('cv_url')
+        cover_letter = request.POST.get('cover_letter', '')
+
+        if not cv_url:
+            messages.error(request, "CV URL wajib diisi.")
+            return redirect('jobs:apply_to_job', job_id=job_id)
+
+        # Create application
+        application = JobApplication.objects.create(
+            job=job,
+            mahasiswa=request.user,
+            cv_url=cv_url,
+            cover_letter=cover_letter,
+            status='applied'
+        )
+
+        messages.success(request, f"Berhasil melamar ke {job.title}!")
+        return redirect('jobs:my_applications')
+
+    # Get mahasiswa CV from profile if available
+    try:
+        mahasiswa = Mahasiswa.objects.get(email=request.user)
+        default_cv = mahasiswa.cv
+    except Mahasiswa.DoesNotExist:
+        default_cv = ''
+
+    context = {
+        'job': job,
+        'default_cv': default_cv,
+    }
+    return render(request, "jobs/apply_job.html", context)
+
+@login_required
+def my_applications(request):
+    """View all job applications by current user"""
+    from .models import JobApplication
+
+    if request.user.role != 'mahasiswa':
+        messages.error(request, "Akses ditolak.")
+        return redirect('jobs:lowongan')
+
+    applications = JobApplication.objects.filter(
+        mahasiswa=request.user
+    ).select_related('job').order_by('-applied_date')
+
+    context = {
+        'applications': applications,
+    }
+    return render(request, "jobs/my_applications.html", context)
+
+@login_required
+def create_job_posting(request):
+    """Create a new job posting (Admin only)"""
+    from .models import JobPosting
+
+    if request.user.role not in ['admin', 'supervisor']:
+        messages.error(request, "Akses ditolak. Hanya admin dan supervisor yang dapat membuat lowongan.")
+        return redirect('jobs:lowongan')
+
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        company_name = request.POST.get('company_name')
+        company_logo = request.POST.get('company_logo', '')
+        description = request.POST.get('description')
+        requirements = request.POST.get('requirements')
+        location = request.POST.get('location')
+        job_type = request.POST.get('job_type')
+        salary_range = request.POST.get('salary_range', '')
+        application_deadline = request.POST.get('application_deadline')
+
+        if not all([title, company_name, description, requirements, location, job_type, application_deadline]):
+            messages.error(request, "Semua field wajib diisi kecuali logo dan gaji.")
+            return render(request, "jobs/create_job_posting.html", {'job_types': JobPosting.JOB_TYPE_CHOICES})
+
+        job = JobPosting.objects.create(
+            title=title,
+            company_name=company_name,
+            company_logo=company_logo,
+            description=description,
+            requirements=requirements,
+            location=location,
+            job_type=job_type,
+            salary_range=salary_range,
+            application_deadline=application_deadline,
+            created_by=request.user,
+            is_active=True
+        )
+
+        messages.success(request, f"Lowongan '{job.title}' berhasil dibuat!")
+        return redirect('jobs:manage_job_postings')
+
+    context = {
+        'job_types': JobPosting.JOB_TYPE_CHOICES,
+    }
+    return render(request, "jobs/create_job_posting.html", context)
+
+@login_required
+def manage_job_postings(request):
+    """Manage all job postings (Admin/Supervisor)"""
+    from .models import JobPosting
+
+    if request.user.role not in ['admin', 'supervisor']:
+        messages.error(request, "Akses ditolak.")
+        return redirect('jobs:lowongan')
+
+    job_postings = JobPosting.objects.all().order_by('-posted_date')
+
+    context = {
+        'job_postings': job_postings,
+    }
+    return render(request, "jobs/manage_job_postings.html", context)
+
+@login_required
+def edit_job_posting(request, job_id):
+    """Edit a job posting"""
+    from .models import JobPosting
+
+    if request.user.role not in ['admin', 'supervisor']:
+        messages.error(request, "Akses ditolak.")
+        return redirect('jobs:lowongan')
+
+    job = get_object_or_404(JobPosting, id=job_id)
+
+    if request.method == 'POST':
+        job.title = request.POST.get('title')
+        job.company_name = request.POST.get('company_name')
+        job.company_logo = request.POST.get('company_logo', '')
+        job.description = request.POST.get('description')
+        job.requirements = request.POST.get('requirements')
+        job.location = request.POST.get('location')
+        job.job_type = request.POST.get('job_type')
+        job.salary_range = request.POST.get('salary_range', '')
+        job.application_deadline = request.POST.get('application_deadline')
+        job.is_active = request.POST.get('is_active') == 'on'
+
+        job.save()
+
+        messages.success(request, f"Lowongan '{job.title}' berhasil diupdate!")
+        return redirect('jobs:manage_job_postings')
+
+    context = {
+        'job': job,
+        'job_types': JobPosting.JOB_TYPE_CHOICES,
+    }
+    return render(request, "jobs/edit_job_posting.html", context)
+
+@login_required
+def delete_job_posting(request, job_id):
+    """Delete a job posting"""
+    from .models import JobPosting
+
+    if request.user.role not in ['admin', 'supervisor']:
+        return JsonResponse({'error': 'Akses ditolak'}, status=403)
+
+    job = get_object_or_404(JobPosting, id=job_id)
+
+    if request.method == 'POST':
+        job_title = job.title
+        job.delete()
+        messages.success(request, f"Lowongan '{job_title}' berhasil dihapus!")
+        return redirect('jobs:manage_job_postings')
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+def review_applications(request, job_id):
+    """Review applications for a job posting"""
+    from .models import JobPosting, JobApplication
+
+    if request.user.role not in ['admin', 'supervisor']:
+        messages.error(request, "Akses ditolak.")
+        return redirect('jobs:lowongan')
+
+    job = get_object_or_404(JobPosting, id=job_id)
+    applications = JobApplication.objects.filter(job=job).select_related('mahasiswa').order_by('-applied_date')
+
+    context = {
+        'job': job,
+        'applications': applications,
+    }
+    return render(request, "jobs/review_applications.html", context)
+
+@login_required
+def update_application_status(request, application_id):
+    """Update status of a job application"""
+    from .models import JobApplication
+
+    if request.user.role not in ['admin', 'supervisor']:
+        return JsonResponse({'error': 'Akses ditolak'}, status=403)
+
+    application = get_object_or_404(JobApplication, id=application_id)
+
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        notes = request.POST.get('notes', '')
+
+        if status in dict(JobApplication.STATUS_CHOICES):
+            application.status = status
+            application.notes = notes
+            application.save()
+
+            messages.success(request, f"Status aplikasi berhasil diupdate menjadi '{application.get_status_display()}'!")
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'message': 'Status berhasil diupdate'})
+            else:
+                return redirect('jobs:review_applications', job_id=application.job.id)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)

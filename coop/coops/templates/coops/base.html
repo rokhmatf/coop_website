@@ -46,6 +46,30 @@
           {% block navbar_title %}Admin Dashboard{% endblock %}
         </a>
         <div class="navbar-nav ms-auto">
+          <div class="nav-item dropdown me-3">
+            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" id="notificationDropdown">
+              <i class="bi bi-bell fs-5"></i>
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display: none;">
+                0
+              </span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 350px; max-height: 500px; overflow-y: auto;">
+              <div class="dropdown-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Notifikasi</h6>
+                <button class="btn btn-sm btn-link text-decoration-none" id="markAllRead">
+                  <small>Tandai Semua Dibaca</small>
+                </button>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div id="notificationList">
+                <div class="text-center py-3 text-muted">
+                  <i class="bi bi-bell-slash fs-3"></i>
+                  <p class="mb-0 mt-2">Tidak ada notifikasi</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
               <i class="bi bi-person-circle me-1"></i>
@@ -241,6 +265,167 @@
         }
       });
     </script>
+
+    <script>
+      // Notification System
+      function loadNotifications() {
+        fetch('{% url "coops:get_notifications" %}')
+          .then(response => response.json())
+          .then(data => {
+            const notificationList = document.getElementById('notificationList');
+            const notificationBadge = document.getElementById('notificationBadge');
+
+            if (data.notifications.length === 0) {
+              notificationList.innerHTML = `
+                <div class="text-center py-3 text-muted">
+                  <i class="bi bi-bell-slash fs-3"></i>
+                  <p class="mb-0 mt-2">Tidak ada notifikasi</p>
+                </div>
+              `;
+              notificationBadge.style.display = 'none';
+            } else {
+              let html = '';
+              data.notifications.forEach(notif => {
+                const typeIcon = {
+                  'info': 'info-circle',
+                  'warning': 'exclamation-triangle',
+                  'success': 'check-circle',
+                  'danger': 'exclamation-circle'
+                }[notif.type] || 'bell';
+
+                const typeColor = {
+                  'info': 'primary',
+                  'warning': 'warning',
+                  'success': 'success',
+                  'danger': 'danger'
+                }[notif.type] || 'secondary';
+
+                const readClass = notif.is_read ? '' : 'bg-light';
+
+                html += `
+                  <div class="dropdown-item ${readClass}" style="white-space: normal;" onclick="markAsRead(${notif.id}, '${notif.link}')">
+                    <div class="d-flex">
+                      <div class="me-2">
+                        <i class="bi bi-${typeIcon} text-${typeColor} fs-5"></i>
+                      </div>
+                      <div class="flex-grow-1">
+                        <h6 class="mb-1">${notif.title}</h6>
+                        <p class="mb-1 small text-muted">${notif.message}</p>
+                        <small class="text-muted">${formatDate(notif.created_at)}</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="dropdown-divider"></div>
+                `;
+              });
+
+              notificationList.innerHTML = html;
+
+              if (data.unread_count > 0) {
+                notificationBadge.textContent = data.unread_count;
+                notificationBadge.style.display = 'inline-block';
+              } else {
+                notificationBadge.style.display = 'none';
+              }
+            }
+          })
+          .catch(error => console.error('Error loading notifications:', error));
+      }
+
+      function markAsRead(notificationId, link) {
+        fetch(`/coops/notifications/${notificationId}/read/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              loadNotifications();
+              if (link && link !== '') {
+                window.location.href = link;
+              }
+            }
+          })
+          .catch(error => console.error('Error marking notification as read:', error));
+      }
+
+      function markAllNotificationsRead() {
+        fetch('{% url "coops:mark_all_notifications_read" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              loadNotifications();
+            }
+          })
+          .catch(error => console.error('Error marking all notifications as read:', error));
+      }
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Baru saja';
+        if (diffMins < 60) return `${diffMins} menit yang lalu`;
+        if (diffHours < 24) return `${diffHours} jam yang lalu`;
+        if (diffDays < 7) return `${diffDays} hari yang lalu`;
+
+        return date.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        });
+      }
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
+      document.getElementById('markAllRead').addEventListener('click', function(e) {
+        e.preventDefault();
+        markAllNotificationsRead();
+      });
+
+      document.getElementById('notificationDropdown').addEventListener('click', function() {
+        loadNotifications();
+      });
+
+      loadNotifications();
+
+      setInterval(loadNotifications, 60000);
+    </script>
+
+    <style>
+      .notification-dropdown .dropdown-item {
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+      }
+      .notification-dropdown .dropdown-item:hover {
+        background-color: #f8f9fa;
+      }
+    </style>
+
     {% block extra_js %}{% endblock %}
   </body>
 </html>
