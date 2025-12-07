@@ -1,0 +1,61 @@
+/* Global Sticky Navbar Styles */
+.navbar {
+  position: fixed !important;
+  top: 0 !important;
+  width: 100% !important;
+  z-index: 1030 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+body {
+  padding-top: 76px !important; /* Height of navbar + margin */
+}
+
+/* Content adjustment when navbar is sticky */
+.container:first-of-type,
+.container-fluid:first-of-type {
+  margin-top: 1rem !important;
+}
+
+/* Breadcrumb adjustment */
+.breadcrumb-container {
+  margin-top: 1rem !important;
+}
+
+/* Dropdown menu adjustment */
+.navbar .dropdown-menu {
+  margin-top: 0.5rem !important;
+}
+
+/* Make sure modals are above sticky navbar */
+.modal {
+  z-index: 1050 !important;
+}
+
+/* Adjust backdrop for modals */
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+
+/* Fix for any overlapping issues */
+.navbar-brand,
+.navbar-nav {
+  z-index: 1031 !important;
+}
+
+/* Special handling for full-screen content */
+.min-vh-100 {
+  min-height: calc(100vh - 76px) !important;
+  margin-top: 76px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  body {
+    padding-top: 80px !important; /* Slightly more padding for mobile */
+  }
+  
+  .min-vh-100 {
+    margin-top: 80px !important;
+  }
+}

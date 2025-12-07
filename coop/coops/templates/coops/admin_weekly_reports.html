@@ -1,0 +1,392 @@
+{% extends 'coops/base.html' %}
+{% load static %}
+
+{% block title %}Kelola Laporan Mingguan{% endblock %}
+
+{% block navbar_icon %}bi bi-calendar-week{% endblock %}
+
+{% block navbar_title %}Laporan Mingguan{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Laporan Mingguan</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <!-- Header Section -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="mb-1">
+            <i class="bi bi-calendar-week me-2 text-primary"></i>
+            Kelola Laporan Mingguan
+          </h2>
+          <p class="text-muted mb-0">Monitoring laporan mingguan mahasiswa yang belum mendapat tempat magang</p>
+        </div>
+        <div>
+          <a href="{% url 'coops:manage_deadline_reminder' %}" class="btn btn-outline-primary">
+            <i class="bi bi-gear me-2"></i>Kelola Deadline
+          </a>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card bg-primary text-white">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h6 class="card-title">Total Mahasiswa</h6>
+                  <h2 class="mb-0">{{ total_students }}</h2>
+                </div>
+                <div class="align-self-center">
+                  <i class="bi bi-people" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-warning text-white">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h6 class="card-title">Belum Lapor Minggu Ini</h6>
+                  <h2 class="mb-0">{{ not_reported_this_week }}</h2>
+                </div>
+                <div class="align-self-center">
+                  <i class="bi bi-exclamation-triangle" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-danger text-white">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h6 class="card-title">Melewati Deadline</h6>
+                  <h2 class="mb-0">{{ overdue_students }}</h2>
+                </div>
+                <div class="align-self-center">
+                  <i class="bi bi-clock-history" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-success text-white">
+            <div class="card-body">
+              <div class="d-flex justify-content-between">
+                <div>
+                  <h6 class="card-title">Lapor Minggu Ini</h6>
+                  <h2 class="mb-0">{{ reported_this_week }}</h2>
+                </div>
+                <div class="align-self-center">
+                  <i class="bi bi-check-circle" style="font-size: 2rem; opacity: 0.7;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Section -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <form method="GET" class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label">Filter Status</label>
+              <select name="status" class="form-select">
+                <option value="">Semua Status</option>
+                <option value="not_reported" {% if request.GET.status == 'not_reported' %}selected{% endif %}>Belum Lapor</option>
+                <option value="reported" {% if request.GET.status == 'reported' %}selected{% endif %}>Sudah Lapor</option>
+                <option value="overdue" {% if request.GET.status == 'overdue' %}selected{% endif %}>Melewati Deadline</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Minggu</label>
+              <select name="week" class="form-select">
+                <option value="">Minggu Ini</option>
+                {% for week in available_weeks %}
+                  <option value="{{ week.week_start|date:'Y-m-d' }}" 
+                          {% if request.GET.week == week.week_start|date:'Y-m-d' %}selected{% endif %}>
+                    {{ week.week_start|date:'d M Y' }} - {{ week.week_end|date:'d M Y' }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Cari Mahasiswa</label>
+              <input type="text" name="search" class="form-control" 
+                     placeholder="Nama atau NIM" value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-search"></i> Filter
+              </button>
+              <a href="{% url 'coops:admin_weekly_reports' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-clockwise"></i>
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Reports Table -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-white">
+          <h6 class="mb-0">
+            <i class="bi bi-table me-2"></i>
+            Daftar Laporan Mingguan
+            <span class="badge bg-secondary ms-2">{{ reports.count }} laporan</span>
+          </h6>
+        </div>
+        <div class="card-body p-0">
+          {% if reports %}
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Mahasiswa</th>
+                    <th>NIM</th>
+                    <th>Minggu</th>
+                    <th>Tanggal Lapor</th>
+                    <th>Aktivitas Utama</th>
+                    <th>Progress</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for report in reports %}
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                            {{ report.student.get_full_name|slice:":1"|upper }}
+                          </div>
+                          <div>
+                            <div class="fw-medium">{{ report.student.get_full_name }}</div>
+                            <small class="text-muted">{{ report.student.email }}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-dark">{{ report.student.mahasiswa.nim }}</span>
+                      </td>
+                      <td>
+                        <div>
+                          <div class="fw-medium">Minggu {{ report.week_number }}</div>
+                          <small class="text-muted">
+                            {{ report.week_start_date|date:'d M' }} - {{ report.week_end_date|date:'d M Y' }}
+                          </small>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="text-muted">{{ report.submitted_at|date:'d M Y H:i' }}</span>
+                      </td>
+                      <td>
+                        <div class="text-truncate" style="max-width: 200px;" title="{{ report.main_activities }}">
+                          {{ report.main_activities|truncatechars:50 }}
+                        </div>
+                      </td>
+                      <td>
+                        <div class="progress" style="height: 6px;">
+                          <div class="progress-bar bg-info" role="progressbar" 
+                               style="width: {{ report.progress_percentage }}%"></div>
+                        </div>
+                        <small class="text-muted">{{ report.progress_percentage }}%</small>
+                      </td>
+                      <td>
+                        {% if report.is_late %}
+                          <span class="badge bg-danger">Terlambat</span>
+                        {% else %}
+                          <span class="badge bg-success">Tepat Waktu</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <div class="btn-group" role="group">
+                          <button type="button" class="btn btn-sm btn-outline-primary" 
+                                  data-bs-toggle="modal" data-bs-target="#reportModal{{ report.id }}">
+                            <i class="bi bi-eye"></i>
+                          </button>
+                          <a href="mailto:{{ report.student.email }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-envelope"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <!-- Report Detail Modal -->
+                    <div class="modal fade" id="reportModal{{ report.id }}" tabindex="-1">
+                      <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title">
+                              <i class="bi bi-journal-text me-2"></i>
+                              Laporan Mingguan - {{ report.student.get_full_name }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <div class="modal-body">
+                            <div class="row">
+                              <div class="col-md-6">
+                                <h6 class="text-primary">Informasi Laporan</h6>
+                                <table class="table table-sm">
+                                  <tr>
+                                    <td class="fw-medium">Minggu ke:</td>
+                                    <td>{{ report.week_number }}</td>
+                                  </tr>
+                                  <tr>
+                                    <td class="fw-medium">Periode:</td>
+                                    <td>{{ report.week_start_date|date:'d M' }} - {{ report.week_end_date|date:'d M Y' }}</td>
+                                  </tr>
+                                  <tr>
+                                    <td class="fw-medium">Tanggal Lapor:</td>
+                                    <td>{{ report.submitted_at|date:'d M Y H:i' }}</td>
+                                  </tr>
+                                  <tr>
+                                    <td class="fw-medium">Status:</td>
+                                    <td>
+                                      {% if report.is_late %}
+                                        <span class="badge bg-danger">Terlambat</span>
+                                      {% else %}
+                                        <span class="badge bg-success">Tepat Waktu</span>
+                                      {% endif %}
+                                    </td>
+                                  </tr>
+                                </table>
+                              </div>
+                              <div class="col-md-6">
+                                <h6 class="text-primary">Progress</h6>
+                                <div class="progress mb-2" style="height: 8px;">
+                                  <div class="progress-bar bg-info" role="progressbar" 
+                                       style="width: {{ report.progress_percentage }}%"></div>
+                                </div>
+                                <p class="small text-muted">{{ report.progress_percentage }}% dari target mingguan</p>
+                              </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="row">
+                              <div class="col-12">
+                                <h6 class="text-primary">Aktivitas Utama</h6>
+                                <p class="mb-3">{{ report.main_activities|linebreaks }}</p>
+
+                                <h6 class="text-primary">Pencapaian Target</h6>
+                                <p class="mb-3">{{ report.target_achievement|linebreaks }}</p>
+
+                                <h6 class="text-primary">Perusahaan yang Dilamar</h6>
+                                <p class="mb-3">{{ report.companies_applied|linebreaks }}</p>
+
+                                {% if report.interview_status %}
+                                  <h6 class="text-primary">Status Interview</h6>
+                                  <p class="mb-3">{{ report.interview_status|linebreaks }}</p>
+                                {% endif %}
+
+                                {% if report.challenges_faced %}
+                                  <h6 class="text-primary">Kendala yang Dihadapi</h6>
+                                  <p class="mb-3">{{ report.challenges_faced|linebreaks }}</p>
+                                {% endif %}
+
+                                {% if report.help_needed %}
+                                  <h6 class="text-primary">Bantuan yang Diperlukan</h6>
+                                  <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    {{ report.help_needed|linebreaks }}
+                                  </div>
+                                {% endif %}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                            <a href="mailto:{{ report.student.email }}" class="btn btn-primary">
+                              <i class="bi bi-envelope me-2"></i>Kirim Email
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i>
+              <h5 class="text-muted mt-3">Tidak ada laporan ditemukan</h5>
+              <p class="text-muted">Belum ada laporan mingguan untuk filter yang dipilih.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Students Without Reports -->
+      {% if students_without_reports %}
+        <div class="card shadow-sm mt-4">
+          <div class="card-header bg-warning text-dark">
+            <h6 class="mb-0">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              Mahasiswa Belum Lapor Minggu Ini
+              <span class="badge bg-dark ms-2">{{ students_without_reports.count }}</span>
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              {% for student in students_without_reports %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                  <div class="d-flex align-items-center p-3 border rounded">
+                    <div class="avatar-sm bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center me-3">
+                      {{ student.get_full_name|slice:":1"|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="fw-medium">{{ student.get_full_name }}</div>
+                      <small class="text-muted">{{ student.mahasiswa.nim }}</small>
+                    </div>
+                    <a href="mailto:{{ student.email }}" class="btn btn-sm btn-outline-warning">
+                      <i class="bi bi-envelope"></i>
+                    </a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.progress {
+  background-color: #e9ecef;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.modal-lg {
+  max-width: 800px;
+}
+</style>
+{% endblock %}

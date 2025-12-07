@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Avatar Circle */
+.avatar-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+/* Icon Circles */
+.icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 1.5rem;
+}
+
+/* Info Items */
+.info-item label {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Timeline Styles */
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e9ecef;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -23px;
+  top: 5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e9ecef;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 3px #e9ecef;
+}
+
+.timeline-item.completed .timeline-marker {
+  background: #28a745;
+  box-shadow: 0 0 0 3px #28a745;
+}
+
+.timeline-item.active .timeline-marker {
+  background: #007bff;
+  box-shadow: 0 0 0 3px #007bff;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 3px #007bff;
+  }
+  50% {
+    box-shadow: 0 0 0 3px #007bff, 0 0 0 6px rgba(0, 123, 255, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 3px #007bff;
+  }
+}
+
+.timeline-content h6 {
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+/* Card Hover Effects */
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Custom Badges */
+.badge {
+  font-weight: 500;
+  padding: 8px 12px;
+}
+
+/* Progress Bar Custom */
+.progress {
+  background-color: #e9ecef;
+  border-radius: 10px;
+}
+
+.progress-bar {
+  border-radius: 10px;
+}
+
+/* Utility widths for progress (used by template classes) */
+.progress-bar.progress-100 { width: 100% !important; }
+.progress-bar.progress-50  { width: 50%  !important; }
+.progress-bar.progress-25  { width: 25%  !important; }
+.progress-bar.progress-0   { width: 0%   !important; }
+
+/* Button Enhancements */
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .avatar-circle {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .icon-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+  
+  .timeline {
+    padding-left: 20px;
+  }
+  
+  .timeline-marker {
+    left: -18px;
+    width: 12px;
+    height: 12px;
+  }
+}

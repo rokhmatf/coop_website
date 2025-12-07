@@ -1,0 +1,284 @@
+{% extends 'coops/base.html' %}
+{% load static %}
+
+{% block title %}Daftar Laporan Mingguan{% endblock %}
+
+{% block navbar_icon %}bi bi-calendar-week{% endblock %}
+
+{% block navbar_title %}Daftar Laporan Mingguan{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Laporan Mingguan</li>
+{% endblock %}
+
+{% block content %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'coops:mahasiswa_dashboard' %}">
+          <i class="bi bi-arrow-left me-2"></i>Kembali ke Dashboard
+        </a>
+        <div class="navbar-nav ms-auto">
+          <div class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle me-1"></i>
+              {% if request.user.is_authenticated %}
+                {{ request.user.get_full_name|default:request.user.username }}
+              {% endif %}
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profil</a></li>
+              <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        <div class="row">
+            <div class="col-12">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0 bg-gradient">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h2 class="mb-2">📊 Daftar Laporan Mingguan</h2>
+                                <p class="mb-0 opacity-75">
+                                    <i class="bi bi-journal-text me-2"></i>Total Laporan: {{ total_reports }}
+                                    {% if deadline_reminder %}
+                                        | <i class="bi bi-clock me-2"></i>Deadline: {{ deadline_reminder.deadline_magang|date:"d M Y" }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="avatar-circle">
+                                    <i class="bi bi-list-ul" style="font-size: 3rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Week Status -->
+        <div class="row mb-4">
+            <div class="col-12">
+                {% if current_week_report %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <strong>Laporan minggu ini sudah dibuat!</strong> 
+                        Minggu {{ current_week_start|date:"d M Y" }} - {{ current_week_start|date:"d M Y"|add:"+6 days" }}
+                        <a href="{% url 'coops:weekly_report' %}" class="btn btn-sm btn-outline-success ms-2">
+                            <i class="bi bi-pencil me-1"></i>Edit
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Laporan minggu ini belum dibuat!</strong> 
+                        Minggu {{ current_week_start|date:"d M Y" }} - {{ current_week_start|date:"d M Y"|add:"+6 days" }}
+                        <a href="{% url 'coops:weekly_report' %}" class="btn btn-sm btn-warning ms-2">
+                            <i class="bi bi-plus-circle me-1"></i>Buat Sekarang
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'coops:weekly_report' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Buat Laporan Baru
+                    </a>
+                    <a href="{% url 'coops:mahasiswa_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-house me-2"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list me-2 text-primary"></i>Riwayat Laporan Mingguan
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if reports %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Minggu</th>
+                                            <th>Aktivitas Pencarian</th>
+                                            <th>Status Aplikasi</th>
+                                            <th>Bantuan</th>
+                                            <th>Tanggal Submit</th>
+                                            <th>Admin Response</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for report in reports %}
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-semibold">{{ report.minggu|date:"d M Y" }}</div>
+                                                    <small class="text-muted">{{ report.minggu|date:"d M" }} - {{ report.minggu|date:"d M Y"|add:"+6 days" }}</small>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold">{{ report.kegiatan_pencarian|truncatechars:40 }}</div>
+                                                    {% if report.perusahaan_contacted %}
+                                                        <small class="text-muted">{{ report.perusahaan_contacted|truncatechars:30 }}</small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge 
+                                                        {% if report.status_aplikasi == 'interview_dijadwalkan' %}bg-info
+                                                        {% elif report.status_aplikasi == 'menunggu_respon' %}bg-warning
+                                                        {% elif report.status_aplikasi == 'ditolak' %}bg-danger
+                                                        {% else %}bg-secondary{% endif %}">
+                                                        {{ report.get_status_aplikasi_display }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if report.butuh_bantuan %}
+                                                        <span class="badge bg-warning">
+                                                            <i class="bi bi-hand-thumbs-up me-1"></i>Perlu Bantuan
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-check-circle me-1"></i>Mandiri
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">{{ report.submitted_at|date:"d M Y, H:i" }}</small>
+                                                </td>
+                                                <td>
+                                                    {% if report.admin_response %}
+                                                        <span class="badge bg-info">
+                                                            <i class="bi bi-chat-left-text me-1"></i>Ada Respon
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">
+                                                            <i class="bi bi-clock me-1"></i>Menunggu
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <button class="btn btn-outline-primary" onclick="viewReport({{ report.id }})" title="Lihat Detail">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                        <a href="{% url 'coops:weekly_report' %}" class="btn btn-outline-warning" title="Edit">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="bi bi-journal-x" style="font-size: 4rem; color: #ddd;"></i>
+                                <h5 class="mt-3 text-muted">Belum Ada Laporan Mingguan</h5>
+                                <p class="text-muted">Anda belum membuat laporan mingguan. Mulai buat laporan pertama Anda!</p>
+                                <a href="{% url 'coops:weekly_report' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle me-2"></i>Buat Laporan Pertama
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <h6 class="card-title text-info">
+                            <i class="bi bi-info-circle me-2"></i>Informasi Laporan Mingguan
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Laporan wajib diisi setiap minggu</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Reminder dikirim setiap Senin pagi</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Admin akan memberikan feedback</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Bantu mencari solusi jika ada kendala</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Report Detail -->
+    <div class="modal fade" id="reportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail Laporan Mingguan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="reportDetail">
+                    <!-- Report detail will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function viewReport(reportId) {
+        // For now, just show a placeholder modal
+        // In real implementation, you would fetch report details via AJAX
+        document.getElementById('reportDetail').innerHTML = `
+            <div class="text-center">
+                <i class="bi bi-journal-text" style="font-size: 3rem; color: #ddd;"></i>
+                <h5 class="mt-3">Detail Laporan #${reportId}</h5>
+                <p class="text-muted">Fitur detail laporan akan diimplementasikan...</p>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('reportModal'));
+        modal.show();
+    }
+</script>
+{% endblock %}

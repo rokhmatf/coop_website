@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sertifikat Program Cooperative Education</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'sertif.css' %}">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Action Buttons -->
+        <div class="action-buttons d-print-none">
+            <button class="btn btn-print" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>Cetak Sertifikat
+            </button>
+            <button class="btn btn-download" onclick="downloadPDF()">
+                <i class="bi bi-download me-2"></i>Download PDF
+            </button>
+            <a href="{% url 'coops:mahasiswa_dashboard' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Kembali ke Dashboard
+            </a>
+        </div>
+
+        <!-- Certificate -->
+        <div class="certificate-container">
+            <!-- Decorative Elements -->
+            <i class="bi bi-mortarboard decorative-element decorative-left"></i>
+            <i class="bi bi-award decorative-element decorative-right"></i>
+            
+            <!-- Header -->
+            <div class="certificate-header">
+                <div class="university-logo">
+                    UTS
+                </div>
+                <h1 class="certificate-title">SERTIFIKAT</h1>
+                <p class="certificate-subtitle">Program Cooperative Education</p>
+            </div>
+            
+            <!-- Body -->
+            <div class="certificate-body">
+                <p class="certificate-text">
+                    Diberikan kepada
+                </p>
+                
+                <h2 class="student-name">
+                    {{ mahasiswa.nama|default:konfirmasi.mahasiswa.get_full_name|default:konfirmasi.mahasiswa.username }}
+                </h2>
+                
+                <div class="student-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Nomor Induk Mahasiswa</div>
+                        <div class="detail-value">{{ mahasiswa.nim|default:"NIM tidak tersedia" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Program Studi</div>
+                        <div class="detail-value">{{ mahasiswa.prodi|default:"Program Studi tidak tersedia" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Nama Perusahaan</div>
+                        <div class="detail-value">{{ konfirmasi.nama_perusahaan }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Periode Magang</div>
+                        <div class="detail-value">
+                            {{ konfirmasi.periode_awal|date:"d F Y" }} - {{ konfirmasi.periode_akhir|date:"d F Y" }}
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="certificate-text">
+                    Telah berhasil menyelesaikan Program Cooperative Education<br>
+                    dengan konversi nilai Mata Kuliah Coop:
+                </p>
+                
+                <div class="grade-badge">
+                    Nilai: {{ sertifikat.get_nilai_akhir_display }}
+                </div>
+                
+                <p class="certificate-text">
+                    Diberikan di Sumbawa Besar<br>
+                    Tanggal {{ sertifikat.tanggal_kelulusan|date:"d F Y" }}
+                </p>
+            </div>
+            
+            <!-- Footer -->
+            <div class="certificate-footer">
+                <div class="signature-section">
+                    <div class="signature-line"></div>
+                    <div class="signature-title">Ketua Program Studi</div>
+                    <div class="signature-name">Dr. Kaprodi, M.Kom.</div>
+                </div>
+                <div class="signature-section">
+                    <div class="signature-line"></div>
+                    <div class="signature-title">Koordinator Coop</div>
+                    <div class="signature-name">
+                        {% if sertifikat.dikeluarkan_oleh %}
+                            {{ sertifikat.dikeluarkan_oleh.get_full_name|default:sertifikat.dikeluarkan_oleh.username }}
+                        {% else %}
+                            Admin UTS
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Certificate Number -->
+            <div class="certificate-number">
+                No. {{ sertifikat.nomor_sertifikat }}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function downloadPDF() {
+            const element = document.querySelector('.certificate-container');
+            const opt = {
+                margin: 10,
+                filename: 'sertifikat-coop-{{ mahasiswa.nama|default:konfirmasi.mahasiswa.username }}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Hide action buttons before generating PDF
+            document.querySelector('.action-buttons').style.display = 'none';
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Show action buttons again
+                document.querySelector('.action-buttons').style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>

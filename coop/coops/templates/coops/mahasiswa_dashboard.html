@@ -1,0 +1,372 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Mahasiswa</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'mahasiswa.css' %}" />
+    <link rel="stylesheet" href="{% static 'navbar-sticky.css' %}" />
+  </head>
+  <body class="bg-light">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+          <i class="bi bi-mortarboard-fill me-2"></i>Dashboard Mahasiswa
+        </a>
+        <div class="navbar-nav ms-auto">
+          <div class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle me-1"></i>
+              {% if request.user.is_authenticated %}
+                {{ request.user.get_full_name|default:request.user.username }}
+              {% endif %}
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profil</a></li>
+              <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        <div class="row">
+            <div class="col-12">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4">
+      <!-- Welcome Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card shadow-sm border-0 bg-gradient">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <h3 class="mb-2">Selamat Datang! 👋</h3>
+                  {% if request.user.is_authenticated %}
+                    <h5 class="mb-1">{{ request.user.get_full_name|default:request.user.username }}</h5>
+                    <p class="mb-0 opacity-75">
+                      <i class="bi bi-person-badge me-2"></i>NIM: {{ mahasiswa.nim }} | 
+                      <i class="bi bi-building"></i>{{ mahasiswa.prodi }} | 
+                      <i class="bi bi-calendar me-2"></i>Angkatan {{ mahasiswa.angkatan }}
+                    </p>
+                  {% endif %}
+                </div>
+                <div class="col-md-4 text-center">
+                  <div class="avatar-circle">
+                    <i class="bi bi-person-fill" style="font-size: 3rem;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if request.user.is_authenticated %}
+        <!-- Status Cards -->
+        <div class="row mb-4">
+          <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <div class="icon-circle bg-primary text-white mb-3">
+                  <i class="bi bi-briefcase-fill"></i>
+                </div>
+                <h6 class="card-title">Status Magang</h6>
+                {% if magang %}
+                  <span class="badge fs-6 {% if magang.status == 'accepted' or magang.status == 'completed' %}bg-success{% elif magang.status == 'rejected' %}bg-danger{% else %}bg-warning{% endif %}">
+                    {{ magang.get_status_display }}
+                  </span>
+                {% else %}
+                  <span class="badge bg-secondary fs-6">Belum Mengajukan</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <div class="icon-circle bg-info text-white mb-3">
+                  <i class="bi bi-file-earmark-text-fill"></i>
+                </div>
+                <h6 class="card-title">Dokumen</h6>
+                {% if magang.surat_penerimaan %}
+                  <span class="badge bg-success fs-6">Lengkap</span>
+                {% else %}
+                  <span class="badge bg-warning fs-6">Perlu Upload</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <div class="icon-circle bg-warning text-white mb-3">
+                  <i class="bi bi-clock-fill"></i>
+                </div>
+                <h6 class="card-title">Progress</h6>
+                {% if magang %}
+                  {% if magang.status == 'accepted' %}
+                    <div class="progress" style="height: 8px;">
+                      <div class="progress-bar bg-primary progress-100"></div>
+                    </div>
+                    <small class="text-muted mt-1">Selesai</small>
+                  {% elif magang.status == 'pending' %}
+                    <div class="progress" style="height: 8px;">
+                      <div class="progress-bar bg-primary progress-50"></div>
+                    </div>
+                    <small class="text-muted mt-1">Dalam Review</small>
+                    {% elif magang.status == 'rejected' %}
+                    <div class="progress" style="height: 8px;">
+                      <div class="progress-bar bg-danger progress-0"></div>
+                    </div>
+                    <small class="text-muted mt-1">Ditolak</small>
+                    {% elif magang.status == 'completed' %}
+                    <div class="progress" style="height: 8px;">
+                      <div class="progress-bar bg-success progress-100"></div>
+                    </div>
+                    <small class="text-muted mt-1">Magang Selesai</small>
+                  {% else %}
+                    <div class="progress" style="height: 8px;">
+                      <div class="progress-bar bg-primary progress-25"></div>
+                    </div>
+                    <small class="text-muted mt-1">Perlu Tindakan</small>
+                  {% endif %}
+                {% else %}
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-secondary" style="width: 0%"></div>
+                  </div>
+                  <small class="text-muted mt-1">Belum Dimulai</small>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        {% if magang and magang.status != 'rejected' %}
+          <div class="row">
+            <div class="col-lg-8 mb-4">
+              <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom-0 py-3">
+                  <h5 class="mb-0"><i class="bi bi-briefcase me-2 text-primary"></i>Detail Magang</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="info-item mb-3">
+                        <label class="text-muted small mb-1">Periode Magang</label>
+                        <div class="fw-semibold">
+                          {% if magang.periode_awal %}{{ magang.periode_awal|date:"d M Y" }}{% endif %}
+                          {% if magang.periode_awal and magang.periode_akhir %} - {% endif %}
+                          {% if magang.periode_akhir %}{{ magang.periode_akhir|date:"d M Y" }}{% endif %}
+                        </div>
+                      </div>
+                      <div class="info-item mb-3">
+                        <label class="text-muted small mb-1">Perusahaan</label>
+                        <div class="fw-semibold">{{ magang.nama_perusahaan }}</div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="info-item mb-3">
+                        <label class="text-muted small mb-1">Posisi</label>
+                        <div class="fw-semibold">{{ magang.posisi }}</div>
+                      </div>
+                      <div class="info-item mb-3">
+                        <label class="text-muted small mb-1">Supervisor</label>
+                        <div class="fw-semibold">{{ magang.nama_supervisor }}</div>
+                        <small class="text-muted">{{ magang.email_supervisor }}</small>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {% if magang.surat_penerimaan %}
+                    <div class="mt-3 pt-3 border-top">
+                      <button class="btn btn-info" onclick="sendToKaprodi()">
+                        <i class="bi bi-send me-1"></i>Kirim ke Kaprodi & Mentor
+                    </button>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+              <!-- Certificate Section for Completed Students -->
+              {% if magang.status == 'completed' %}
+                <div class="card shadow-sm border-0 mb-4">
+                  <div class="card-header bg-success text-white border-bottom-0 py-3">
+                    <h6 class="mb-0"><i class="bi bi-award me-2"></i>Sertifikat Coop</h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="text-center mb-3">
+                      <i class="bi bi-award" style="font-size: 3rem; color: #ffd700;"></i>
+                    </div>
+                    <p class="text-center mb-3">
+                      Selamat! Anda telah menyelesaikan Program Cooperative Education.
+                    </p>
+                    <div class="d-grid">
+                      <a href="{% url 'coops:sertifikat_coop' %}" class="btn btn-success">
+                        <i class="bi bi-download me-2"></i>Lihat & Download Sertifikat
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+              
+              <!-- Reports Section -->
+              {% if magang.status == 'accepted' or magang.status == 'completed' %}
+                <div class="card shadow-sm border-0 mb-4">
+                  <div class="card-header bg-white border-bottom-0 py-3">
+                    <h6 class="mb-0"><i class="bi bi-journal-text me-2 text-info"></i>Laporan Magang</h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="d-grid gap-2">
+                      <a href="{% url 'coops:laporan_kemajuan' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-graph-up me-2"></i>Laporan Kemajuan Bulanan
+                      </a>
+                      <a href="{% url 'coops:laporan_mahasiswa' %}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-list me-2"></i>Lihat Semua Laporan
+                      </a>
+                      <a href="{% url 'coops:laporan_akhir' %}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-file-earmark-check me-2"></i>Laporan Akhir
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+              
+              <!-- Timeline -->
+              <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white border-bottom-0 py-3">
+                  <h6 class="mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Timeline</h6>
+                </div>
+                <div class="card-body">
+                  <div class="timeline">
+                    <div class="timeline-item {% if magang.status == 'accepted' or magang.status == 'pending' or magang.status == 'rejected' or magang.status == 'completed' %}completed{% endif %}">
+                      <div class="timeline-marker"></div>
+                      <div class="timeline-content">
+                        <h6 class="mb-1">Pengajuan Magang</h6>
+                        <small class="text-muted">Dokumen telah disubmit</small>
+                      </div>
+                    </div>
+                    <div class="timeline-item {% if magang.status == 'accepted' or magang.status == 'completed' %}completed{% elif magang.status == 'pending' %}active{% endif %}">
+                      <div class="timeline-marker"></div>
+                      <div class="timeline-content">
+                        <h6 class="mb-1">Review Dokumen</h6>
+                        <small class="text-muted">
+                          {% if magang.status == 'pending' %}Sedang direview{% elif magang.status == 'accepted' %}Dokumen disetujui{% else %}Perlu perbaikan{% endif %}
+                        </small>
+                      </div>
+                    </div>
+                    <div class="timeline-item {% if magang.status == 'accepted' %}active {% elif magang.status == 'completed' %}completed{% endif %}">
+                      <div class="timeline-marker"></div>
+                      <div class="timeline-content">
+                        <h6 class="mb-1">Magang Dimulai</h6>
+                        <small class="text-muted">
+                          {% if magang.status == 'accepted' %}Siap memulai magang{% else %}Menunggu persetujuan{% endif %}
+                        </small>
+                      </div>
+                    </div>
+                    <div class="timeline-item {% if magang.status == 'completed' %}completed{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Magang Selesai</h6>
+                            <small class="text-muted">
+                            {% if magang.status == 'completed' %}Magang telah selesai{% else %}Sedang melaksanakan magang{% endif %}
+                            </small>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% elif magang and magang.status == 'rejected' %}
+          <!-- Rejected Magang State: show as initial but with rejected message -->
+          <div class="row justify-content-center">
+            <div class="col-md-8">
+              <div class="card shadow-sm border-0 text-center">
+                <div class="card-body py-5">
+                  <div class="mb-4">
+                    <i class="bi bi-x-circle" style="font-size: 4rem; color: #dc3545;"></i>
+                  </div>
+                  <h5 class="mb-3">Pengajuan Ditolak</h5>
+                  <p class="text-muted mb-4">Pengajuan magang Anda ditolak. Silakan periksa catatan dari admin atau unggah kembali dokumen yang diperlukan dan ajukan kembali.</p>
+                  <div style="display: flex; justify-content: space-between;">
+                    <div class="col-md-6"><a href="{% url 'jobs:lowongan' %}" class="btn btn-success btn-lg">
+                        <i class="bi bi-search me-2"></i>List Lowongan
+                    </a></div>
+                    <div class="col-md-6"><a href="{% url 'coops:konfirmasi_magang' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-arrow-repeat me-2"></i>Ajukan Ulang
+                    </a></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <!-- No Magang State -->
+          <div class="row justify-content-center">
+            <div class="col-md-8">
+              <div class="card shadow-sm border-0 text-center">
+                <div class="card-body py-5">
+                  <div class="mb-4">
+                    <i class="bi bi-briefcase" style="font-size: 4rem; color: #ddd;"></i>
+                  </div>
+                  <h5 class="mb-3">Belum Ada Pengajuan Magang</h5>
+                  <p class="text-muted mb-4">Mulai perjalanan magang Anda dengan mengajukan konfirmasi magang terlebih dahulu.</p>
+                  <div style="display: flex; justify-content: space-between;">
+                    <div class="col-md-6"><a href="{% url 'jobs:lowongan' %}" class="btn btn-success btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>List Lowongan
+                    </a></div>
+                    <div class="col-md-6"><a href="{% url 'coops:konfirmasi_magang' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>Konfirmasi Magang
+                    </a></div>
+                </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="text-center">
+          <p>Silakan login untuk melihat dashboard.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function sendToKaprodi() {
+            if (confirm('Kirim hasil evaluasi ini ke Kaprodi & Mentor?')) {
+                // TODO: Implement email sending
+                alert('Fitur kirim ke Kaprodi & Mentor akan diimplementasikan');
+            }
+        }
+    </script>
+  </body>
+</html>

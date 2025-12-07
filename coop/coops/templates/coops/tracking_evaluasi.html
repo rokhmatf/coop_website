@@ -1,0 +1,297 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tracking Evaluasi Supervisor</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'status.css' %}" />
+      <link rel="stylesheet" href="{% static 'navbar-sticky.css' %}" />
+
+  </head>
+  <body class="bg-light">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'coops:status_magang' %}">
+          <i class="bi bi-arrow-left me-2"></i>Kembali ke Status Magang
+        </a>
+        <div class="navbar-nav ms-auto">
+          <div class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle me-1"></i>
+              {% if request.user.is_authenticated %}
+                {{ request.user.get_full_name|default:request.user.username }}
+              {% endif %}
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profil</a></li>
+              <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    {% csrf_token %}
+    <div class="container mt-4">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0 bg-gradient">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h2 class="mb-2">📊 Tracking Evaluasi Supervisor</h2>
+                                <p class="mb-0 opacity-75">
+                                    <i class="bi bi-info-circle me-2"></i>Monitor status pengisian evaluasi UTS & UAS oleh supervisor
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="avatar-circle">
+                                    <i class="bi bi-clipboard-data" style="font-size: 3rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracking per Template -->
+        {% for data in tracking_data %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-bottom-0 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-file-text me-2 text-primary"></i>{{ data.template.nama }}
+                                    <span class="badge {% if data.template.jenis == 'uts' %}bg-info{% else %}bg-success{% endif %} ms-2">
+                                        {{ data.template.get_jenis_display }}
+                                    </span>
+                                </h5>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <small class="text-muted">Progress: {{ data.completion_rate }}%</small>
+                                    </div>
+                                    <div class="progress" style="width: 100px; height: 8px;">
+                                        <div class="progress-bar bg-primary" data-percent="{{ data.completion_rate }}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Summary Statistics -->
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="h4 text-primary mb-1">{{ data.total_supervisors }}</div>
+                                        <small class="text-muted">Total Supervisor</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="h4 text-success mb-1">{{ data.completed }}</div>
+                                        <small class="text-muted">Sudah Mengisi</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="h4 text-warning mb-1">{{ data.pending }}</div>
+                                        <small class="text-muted">Belum Mengisi</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <div class="h4 text-info mb-1">{{ data.completion_rate }}%</div>
+                                        <small class="text-muted">Completion Rate</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Detailed Table -->
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Supervisor</th>
+                                            <th>Email</th>
+                                            <th>Mahasiswa</th>
+                                            <th>Perusahaan</th>
+                                            <th>Status Evaluasi</th>
+                                            <th>Tanggal Submit</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for detail in data.supervisor_details %}
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-semibold">{{ detail.konfirmasi.nama_supervisor }}</div>
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">{{ detail.konfirmasi.email_supervisor }}</small>
+                                                </td>
+                                                <td>
+                                                    <div>{{ detail.konfirmasi.mahasiswa.get_full_name|default:detail.konfirmasi.mahasiswa.username }}</div>
+                                                    <small class="text-muted">{{ detail.konfirmasi.posisi }}</small>
+                                                </td>
+                                                <td>{{ detail.konfirmasi.nama_perusahaan }}</td>
+                                                <td>
+                                                    {% if detail.status == 'completed' %}
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-check-circle me-1"></i>Sudah Diisi
+                                                        </span>
+                                                    {% elif detail.status == 'finished' %}
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-check-circle-fill me-1"></i>Selesai
+                                                        </span>
+                                                    {% elif detail.status == 'pending' %}
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="bi bi-clock me-1"></i>Pending
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">
+                                                            <i class="bi bi-dash-circle me-1"></i>Belum Dibuat
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if detail.submitted_date %}
+                                                        <small class="text-muted">{{ detail.submitted_date|date:"d M Y, H:i" }}</small>
+                                                    {% else %}
+                                                        <small class="text-muted">-</small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        {% if detail.status != 'completed' %}
+                                                            {% if detail.status != 'finished' %}
+                                                                <button class="btn btn-outline-primary" onclick="sendReminder('{{ detail.konfirmasi.id }}', '{{ data.template.id }}')">
+                                                                    <i class="bi bi-envelope"></i>
+                                                                </button>
+                                                            {% endif %}
+                                                            {% else %}
+                                                        {% endif %}
+                                                        {% if detail.status == 'completed'%}
+                                                            <button class="btn btn-outline-info" onclick="viewEvaluation('{{ detail.konfirmasi.id }}', '{{ data.template.id }}')">
+                                                                <i class="bi bi-eye"></i>
+                                                            </button>
+                                                        {% endif %}
+                                                        {% if detail.status == 'finished' %}
+                                                                <button class="btn btn-outline-info" onclick="viewEvaluation('{{ detail.konfirmasi.id }}', '{{ data.template.id }}')">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </button>
+                                                            {% endif %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="mt-3 pt-3 border-top">
+                                <div class="d-flex gap-2">
+                                    {% if data.completed == data.total_supervisors and data.total_supervisors > 0 %}
+                                        <button class="btn btn-success" onclick="downloadResults('{{ data.template.id }}')">
+                                            <i class="bi bi-download me-1"></i>Download Hasil Evaluasi
+                                        </button>
+                                        <button class="btn btn-info" onclick="sendToKaprodi('{{ data.template.id }}')">
+                                            <i class="bi bi-send me-1"></i>Kirim ke Kaprodi & Mentor
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-warning" onclick="sendBulkReminder('{{ data.template.id }}')">
+                                            <i class="bi bi-envelope-exclamation me-1"></i>Kirim Reminder Massal
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 4rem; color: #ddd;"></i>
+                            <h5 class="mt-3 text-muted">Belum Ada Template Evaluasi</h5>
+                            <p class="text-muted">Silakan buat template evaluasi terlebih dahulu di admin panel.</p>
+                            <a href="/admin/coops/evaluasitemplate/add/" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Buat Template Evaluasi
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set progress bar widths from data-percent
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.progress-bar[data-percent]').forEach(function(pb) {
+                var p = parseInt(pb.getAttribute('data-percent')) || 0;
+                pb.style.width = p + '%';
+                pb.setAttribute('aria-valuenow', p);
+            });
+        });
+
+        function sendReminder(konfirmasiId, templateId) {
+            if (confirm('Kirim reminder ke supervisor ini?')) {
+                // TODO: Implement AJAX call to send reminder
+                alert('Fitur reminder akan diimplementasikan');
+            }
+        }
+
+        function viewEvaluation(konfirmasiId, templateId) {
+            // Navigate to evaluation results page
+            window.location.href = '/coops/evaluasi/hasil/' + konfirmasiId + '/' + templateId + '/';
+        }
+
+        function downloadResults(templateId) {
+            // Navigate to download endpoint
+            alert('Fitur download akan diimplementasikan');
+        }
+
+        function sendToKaprodi(templateId) {
+            if (confirm('Kirim hasil evaluasi ke Kaprodi dan Mentor?')) {
+                // Create a form to submit POST request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/coops/evaluasi/kirim-kaprodi/' + templateId + '/';
+                
+                // Add CSRF token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value || '{{ csrf_token }}';
+                form.appendChild(csrfInput);
+                
+                // Add form to document and submit
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function sendBulkReminder(templateId) {
+            if (confirm('Kirim reminder ke semua supervisor yang belum mengisi evaluasi?')) {
+                // TODO: Implement bulk reminder
+                alert('Fitur bulk reminder akan diimplementasikan');
+            }
+        }
+    </script>
+  </body>
+</html>

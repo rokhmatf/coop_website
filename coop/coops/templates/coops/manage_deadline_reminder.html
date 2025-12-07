@@ -1,0 +1,412 @@
+{% extends 'coops/base.html' %}
+{% load static %}
+
+{% block title %}Kelola Deadline Reminder{% endblock %}
+
+{% block navbar_icon %}bi bi-alarm{% endblock %}
+
+{% block navbar_title %}Kelola Deadline{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'coops:admin_weekly_reports' %}">Laporan Mingguan</a></li>
+<li class="breadcrumb-item active" aria-current="page">Kelola Deadline</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <!-- Header Section -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="mb-1">
+            <i class="bi bi-calendar-event me-2 text-primary"></i>
+            Kelola Deadline Reminder
+          </h2>
+          <p class="text-muted mb-0">Pengaturan deadline dan reminder untuk laporan mingguan mahasiswa</p>
+        </div>
+        <div>
+          <a href="{% url 'coops:admin_weekly_reports' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Kembali ke Laporan
+          </a>
+        </div>
+      </div>
+
+      <!-- Current Settings Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h6 class="mb-0">
+            <i class="bi bi-gear me-2"></i>
+            Pengaturan Aktif
+          </h6>
+        </div>
+        <div class="card-body">
+          {% if current_reminder %}
+            <div class="row">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="icon-box bg-primary text-white rounded-circle me-3">
+                    <i class="bi bi-calendar-check"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">Deadline Pencarian Magang</h6>
+                    <p class="text-muted mb-0">{{ current_reminder.deadline_date|date:'d F Y' }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="icon-box bg-info text-white rounded-circle me-3">
+                    <i class="bi bi-clock"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">Frekuensi Reminder</h6>
+                    <p class="text-muted mb-0">Setiap {{ current_reminder.reminder_frequency_days }} hari</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="icon-box bg-warning text-white rounded-circle me-3">
+                    <i class="bi bi-envelope"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">Status Email Reminder</h6>
+                    <p class="text-muted mb-0">
+                      {% if current_reminder.email_reminder_enabled %}
+                        <span class="badge bg-success">Aktif</span>
+                      {% else %}
+                        <span class="badge bg-danger">Nonaktif</span>
+                      {% endif %}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="icon-box bg-success text-white rounded-circle me-3">
+                    <i class="bi bi-calendar-plus"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">Dibuat</h6>
+                    <p class="text-muted mb-0">{{ current_reminder.created_at|date:'d M Y H:i' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              <strong>Deskripsi:</strong> {{ current_reminder.description }}
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editReminderModal">
+                <i class="bi bi-pencil me-2"></i>Edit Pengaturan
+              </button>
+              {% if current_reminder.is_active %}
+                <form method="post" action="{% url 'coops:manage_deadline_reminder' %}" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="deactivate">
+                  <input type="hidden" name="reminder_id" value="{{ current_reminder.id }}">
+                  <button type="submit" class="btn btn-danger" onclick="return confirm('Yakin ingin menonaktifkan reminder ini?')">
+                    <i class="bi bi-pause-circle me-2"></i>Nonaktifkan
+                  </button>
+                </form>
+              {% else %}
+                <form method="post" action="{% url 'coops:manage_deadline_reminder' %}" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="activate">
+                  <input type="hidden" name="reminder_id" value="{{ current_reminder.id }}">
+                  <button type="submit" class="btn btn-success">
+                    <i class="bi bi-play-circle me-2"></i>Aktifkan
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+              <h5 class="text-muted mt-3">Belum Ada Pengaturan Deadline</h5>
+              <p class="text-muted">Buat pengaturan deadline dan reminder untuk laporan mingguan mahasiswa.</p>
+              <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createReminderModal">
+                <i class="bi bi-plus-circle me-2"></i>Buat Pengaturan Baru
+              </button>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Statistics Section -->
+      {% if current_reminder %}
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-gradient-primary text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-people" style="font-size: 2.5rem; opacity: 0.8;"></i>
+                <h3 class="mt-2">{{ total_affected_students }}</h3>
+                <p class="mb-0">Mahasiswa Terdampak</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-gradient-warning text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-clock-history" style="font-size: 2.5rem; opacity: 0.8;"></i>
+                <h3 class="mt-2">{{ days_until_deadline }}</h3>
+                <p class="mb-0">Hari Menuju Deadline</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-gradient-danger text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle" style="font-size: 2.5rem; opacity: 0.8;"></i>
+                <h3 class="mt-2">{{ overdue_students }}</h3>
+                <p class="mb-0">Melewati Deadline</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-gradient-success text-white">
+              <div class="card-body text-center">
+                <i class="bi bi-check-circle" style="font-size: 2.5rem; opacity: 0.8;"></i>
+                <h3 class="mt-2">{{ weekly_reports_count }}</h3>
+                <p class="mb-0">Laporan Minggu Ini</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-white">
+            <h6 class="mb-0">
+              <i class="bi bi-activity me-2"></i>
+              Aktivitas Terbaru
+            </h6>
+          </div>
+          <div class="card-body">
+            {% if recent_reports %}
+              <div class="timeline">
+                {% for report in recent_reports %}
+                  <div class="timeline-item">
+                    <div class="timeline-marker bg-primary"></div>
+                    <div class="timeline-content">
+                      <h6 class="mb-1">{{ report.student.get_full_name }}</h6>
+                      <p class="text-muted mb-1">Mengirim laporan minggu ke-{{ report.week_number }}</p>
+                      <small class="text-muted">
+                        <i class="bi bi-clock me-1"></i>
+                        {{ report.submitted_at|timesince }} yang lalu
+                      </small>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-center py-3">
+                <i class="bi bi-journal text-muted" style="font-size: 2rem;"></i>
+                <p class="text-muted mt-2 mb-0">Belum ada aktivitas terbaru</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Create Reminder Modal -->
+<div class="modal fade" id="createReminderModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-plus-circle me-2"></i>
+          Buat Pengaturan Deadline Baru
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'coops:manage_deadline_reminder' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Tanggal Deadline <span class="text-danger">*</span></label>
+                <input type="date" name="deadline_date" class="form-control" required>
+                <div class="form-text">Batas waktu mahasiswa untuk mendapatkan tempat magang</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Frekuensi Reminder (hari) <span class="text-danger">*</span></label>
+                <select name="reminder_frequency_days" class="form-select" required>
+                  <option value="7">Setiap 7 hari (Mingguan)</option>
+                  <option value="3">Setiap 3 hari</option>
+                  <option value="1">Setiap hari</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Deskripsi <span class="text-danger">*</span></label>
+            <textarea name="description" class="form-control" rows="3" required
+                      placeholder="Deskripsi atau instruksi untuk mahasiswa mengenai deadline ini"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input type="checkbox" name="email_reminder_enabled" class="form-check-input" id="emailReminder" checked>
+              <label class="form-check-label" for="emailReminder">
+                Aktifkan email reminder otomatis
+              </label>
+              <div class="form-text">Sistem akan mengirim email reminder secara otomatis sesuai frekuensi yang ditentukan</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle me-2"></i>Buat Pengaturan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Reminder Modal -->
+{% if current_reminder %}
+<div class="modal fade" id="editReminderModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-pencil me-2"></i>
+          Edit Pengaturan Deadline
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'coops:manage_deadline_reminder' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update">
+        <input type="hidden" name="reminder_id" value="{{ current_reminder.id }}">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Tanggal Deadline <span class="text-danger">*</span></label>
+                <input type="date" name="deadline_date" class="form-control" 
+                       value="{{ current_reminder.deadline_date|date:'Y-m-d' }}" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label">Frekuensi Reminder (hari) <span class="text-danger">*</span></label>
+                <select name="reminder_frequency_days" class="form-select" required>
+                  <option value="7" {% if current_reminder.reminder_frequency_days == 7 %}selected{% endif %}>Setiap 7 hari (Mingguan)</option>
+                  <option value="3" {% if current_reminder.reminder_frequency_days == 3 %}selected{% endif %}>Setiap 3 hari</option>
+                  <option value="1" {% if current_reminder.reminder_frequency_days == 1 %}selected{% endif %}>Setiap hari</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Deskripsi <span class="text-danger">*</span></label>
+            <textarea name="description" class="form-control" rows="3" required>{{ current_reminder.description }}</textarea>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input type="checkbox" name="email_reminder_enabled" class="form-check-input" 
+                     id="emailReminderEdit" {% if current_reminder.email_reminder_enabled %}checked{% endif %}>
+              <label class="form-check-label" for="emailReminderEdit">
+                Aktifkan email reminder otomatis
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-warning">
+            <i class="bi bi-check-circle me-2"></i>Update Pengaturan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<style>
+.icon-box {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(45deg, #ffc107, #e0a800);
+}
+
+.bg-gradient-danger {
+  background: linear-gradient(45deg, #dc3545, #b02a37);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(45deg, #28a745, #1e7e34);
+}
+
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -35px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.timeline-content {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 3px solid #007bff;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: -30px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #dee2e6;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+</style>
+{% endblock %}

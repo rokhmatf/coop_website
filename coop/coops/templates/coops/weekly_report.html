@@ -1,0 +1,255 @@
+{% extends 'coops/base.html' %}
+{% load static %}
+
+{% block title %}Laporan Mingguan{% endblock %}
+
+{% block navbar_icon %}bi bi-journal-text{% endblock %}
+
+{% block navbar_title %}Laporan Mingguan{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'coops:weekly_report_list' %}">Laporan Mingguan</a></li>
+<li class="breadcrumb-item active" aria-current="page">Buat Laporan</li>
+{% endblock %}
+
+{% block content %}
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        <div class="row">
+            <div class="col-12">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            </div>
+        </div>
+
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0 bg-gradient">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h2 class="mb-2">📝 Laporan Mingguan</h2>
+                                <p class="mb-0 opacity-75">
+                                    <i class="bi bi-calendar-week me-2"></i>Minggu: {{ week_start|date:"d M Y" }} - {{ week_end|date:"d M Y" }}
+                                    {% if deadline_reminder %}
+                                        | <i class="bi bi-clock me-2"></i>Deadline: {{ deadline_reminder.deadline_magang|date:"d M Y" }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="avatar-circle">
+                                    <i class="bi bi-journal-plus" style="font-size: 3rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning if overdue -->
+        {% if deadline_reminder.is_overdue %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Perhatian!</strong> Anda telah melewati batas waktu untuk mendapatkan tempat magang ({{ deadline_reminder.deadline_magang|date:"d M Y" }}). 
+                    Wajib melaporkan aktivitas pencarian magang setiap minggu.
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Form Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2 text-primary"></i>
+                            {% if existing_report %}Edit Laporan Mingguan{% else %}Buat Laporan Mingguan{% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <!-- Aktivitas Pencarian -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">📋 Aktivitas Pencarian Magang</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.kegiatan_pencarian.id_for_label }}" class="form-label">
+                                            {{ form.kegiatan_pencarian.label }}
+                                        </label>
+                                        {{ form.kegiatan_pencarian }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.perusahaan_contacted.id_for_label }}" class="form-label">
+                                            {{ form.perusahaan_contacted.label }}
+                                        </label>
+                                        {{ form.perusahaan_contacted }}
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label for="{{ form.metode_pencarian.id_for_label }}" class="form-label">
+                                            {{ form.metode_pencarian.label }}
+                                        </label>
+                                        {{ form.metode_pencarian }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Progress dan Evaluasi -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">📊 Progress dan Evaluasi</h6>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.progress_minggu_ini.id_for_label }}" class="form-label">
+                                            {{ form.progress_minggu_ini.label }}
+                                        </label>
+                                        {{ form.progress_minggu_ini }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.kendala_dihadapi.id_for_label }}" class="form-label">
+                                            {{ form.kendala_dihadapi.label }}
+                                        </label>
+                                        {{ form.kendala_dihadapi }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="{{ form.rencana_minggu_depan.id_for_label }}" class="form-label">
+                                            {{ form.rencana_minggu_depan.label }}
+                                        </label>
+                                        {{ form.rencana_minggu_depan }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status dan Bantuan -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">🎯 Status dan Bantuan</h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="{{ form.status_aplikasi.id_for_label }}" class="form-label">
+                                            {{ form.status_aplikasi.label }}
+                                        </label>
+                                        {{ form.status_aplikasi }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        {{ form.butuh_bantuan }}
+                                        <label class="form-check-label" for="{{ form.butuh_bantuan.id_for_label }}">
+                                            {{ form.butuh_bantuan.label }}
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-12" id="catatan-bantuan-section" style="display: none;">
+                                    <div class="mb-3">
+                                        <label for="{{ form.catatan_bantuan.id_for_label }}" class="form-label">
+                                            {{ form.catatan_bantuan.label }}
+                                        </label>
+                                        {{ form.catatan_bantuan }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            {% if existing_report %}Update Laporan{% else %}Simpan Laporan{% endif %}
+                                        </button>
+                                        <a href="{% url 'coops:weekly_report_list' %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-list me-2"></i>Lihat Semua Laporan
+                                        </a>
+                                        <a href="{% url 'coops:mahasiswa_dashboard' %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-house me-2"></i>Dashboard
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <h6 class="card-title text-info">
+                            <i class="bi bi-info-circle me-2"></i>Informasi Laporan Mingguan
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Laporan wajib diisi setiap minggu</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Jelaskan aktivitas pencarian magang secara detail</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Admin akan memberikan feedback dan bantuan</li>
+                                    <li><i class="bi bi-check-circle text-success me-2"></i>Laporan dapat diedit sebelum minggu berakhir</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide bantuan section based on checkbox
+    document.getElementById('{{ form.butuh_bantuan.id_for_label }}').addEventListener('change', function() {
+        const section = document.getElementById('catatan-bantuan-section');
+        if (this.checked) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+
+    // Check on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkbox = document.getElementById('{{ form.butuh_bantuan.id_for_label }}');
+        const section = document.getElementById('catatan-bantuan-section');
+        if (checkbox.checked) {
+            section.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

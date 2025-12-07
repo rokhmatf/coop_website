@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluasi {{ template.jenis_evaluasi }} - {{ konfirmasi.nama_perusahaan }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .evaluation-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+        }
+        .question-card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+        }
+        .question-number {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="evaluation-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1 class="display-6 mb-0">
+                        <i class="bi bi-clipboard-check"></i>
+                        Evaluasi {{ template.jenis_evaluasi }}
+                    </h1>
+                    <p class="mb-0 opacity-75">{{ template.nama_template }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <!-- Student Information -->
+                <div class="card question-card">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">
+                            <i class="bi bi-person-badge"></i>
+                            Informasi Mahasiswa
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Nama:</strong> {{ konfirmasi.mahasiswa.first_name }} {{ konfirmasi.mahasiswa.last_name }}</p>
+                                <p><strong>Email:</strong> {{ konfirmasi.mahasiswa.email }}</p>
+                                <p><strong>Posisi:</strong> {{ konfirmasi.posisi }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Perusahaan:</strong> {{ konfirmasi.nama_perusahaan }}</p>
+                                <p><strong>Supervisor:</strong> {{ konfirmasi.nama_supervisor }}</p>
+                                <p><strong>Periode:</strong> {{ konfirmasi.periode_awal }} - {{ konfirmasi.periode_akhir }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evaluation Form -->
+                <form method="post" id="evaluationForm">
+                    {% csrf_token %}
+                    
+                    <!-- Questions -->
+                    {% for question in questions %}
+                    <div class="card question-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+                                <div class="question-number">{{ forloop.counter }}</div>
+                                <div class="flex-grow-1">
+                                    <h6 class="card-title mb-3">{{ question.pertanyaan }}</h6>
+                                    
+                                    {% if question.tipe == 'rating' %}
+                                        <div class="rating-container">
+                                            <label class="form-label">Rating (1-10):</label>
+                                            <div class="rating-buttons">
+                                                {% for i in "1234567890" %}
+                                                <input type="radio" 
+                                                       class="btn-check" 
+                                                       name="question_{{ question.id }}" 
+                                                       id="q{{ question.id }}_{{ i }}" 
+                                                       value="{{ i }}"
+                                                       {% if question.required %}required{% endif %}>
+                                                <label class="btn btn-outline-primary me-2" for="q{{ question.id }}_{{ i }}">{{ i }}</label>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% elif question.tipe == 'pilihan' %}
+                                        {% for pilihan in question.pilihan %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   name="question_{{ question.id }}" 
+                                                   id="q{{ question.id }}_{{ forloop.counter }}" 
+                                                   value="{{ pilihan }}"
+                                                   {% if question.required %}required{% endif %}>
+                                            <label class="form-check-label" for="q{{ question.id }}_{{ forloop.counter }}">
+                                                {{ pilihan }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <textarea class="form-control" 
+                                                  name="question_{{ question.id }}" 
+                                                  rows="4" 
+                                                  placeholder="Masukkan jawaban Anda..."
+                                                  {% if question.required %}required{% endif %}></textarea>
+                                    {% endif %}
+                                    
+                                    {% if question.required %}
+                                    <small class="text-danger">* Wajib diisi</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Belum ada pertanyaan untuk evaluasi ini.
+                    </div>
+                    {% endfor %}
+
+                    <!-- Submit Button -->
+                    {% if questions %}
+                    <div class="card question-card">
+                        <div class="card-body text-center">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="bi bi-send"></i>
+                                Kirim Evaluasi
+                            </button>
+                            <p class="text-muted mt-2 mb-0">
+                                <i class="bi bi-info-circle"></i>
+                                Pastikan semua pertanyaan wajib sudah dijawab sebelum mengirim.
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form validation
+        document.getElementById('evaluationForm').addEventListener('submit', function(e) {
+            const requiredFields = this.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (field.type === 'radio') {
+                    const radioGroup = this.querySelectorAll(`[name="${field.name}"]`);
+                    const isGroupChecked = Array.from(radioGroup).some(radio => radio.checked);
+                    if (!isGroupChecked) {
+                        isValid = false;
+                        field.closest('.card').style.borderColor = '#dc3545';
+                    } else {
+                        field.closest('.card').style.borderColor = '';
+                    }
+                } else if (!field.value.trim()) {
+                    isValid = false;
+                    field.style.borderColor = '#dc3545';
+                } else {
+                    field.style.borderColor = '';
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Mohon lengkapi semua pertanyaan yang wajib diisi.');
+            }
+        });
+    </script>
+</body>
+</html>
