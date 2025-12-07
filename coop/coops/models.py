@@ -1,5 +1,6 @@
 from django.db import models
 from accounts.models import User
+from django.utils import timezone
 
 class KonfirmasiMagang(models.Model):
     mahasiswa = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role': 'mahasiswa'})
@@ -12,7 +13,7 @@ class KonfirmasiMagang(models.Model):
     nama_supervisor = models.CharField(max_length=200)
     email_supervisor = models.EmailField()
     wa_supervisor = models.CharField(max_length=20, blank=True, null=True)
-    surat_penerimaan = models.FileField(upload_to='surat_magang/')
+    surat_penerimaan = models.URLField(max_length=500, verbose_name="Surat Penerimaan (Firebase URL)")
 
     status = models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
@@ -110,7 +111,7 @@ class LaporanAkhir(models.Model):
     saran_kampus = models.TextField(help_text="Saran untuk kampus")
     
     # File laporan
-    file_laporan = models.FileField(upload_to='laporan_akhir/', null=True, blank=True)
+    file_laporan = models.URLField(max_length=500, null=True, blank=True, verbose_name="File Laporan (Firebase URL)")
     
     status = models.CharField(max_length=20, choices=[
         ('draft', 'Draft'),
@@ -298,3 +299,29 @@ class DeadlineReminder(models.Model):
         """Cek apakah deadline sudah terlewati"""
         from django.utils import timezone
         return timezone.now().date() > self.deadline_date
+
+
+class Notification(models.Model):
+    """Model untuk notifikasi in-app"""
+    NOTIFICATION_TYPES = [
+        ('info', 'Information'),
+        ('warning', 'Warning'),
+        ('success', 'Success'),
+        ('danger', 'Urgent'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications', verbose_name="User")
+    title = models.CharField(max_length=200, verbose_name="Judul")
+    message = models.TextField(verbose_name="Pesan")
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='info', verbose_name="Tipe")
+    is_read = models.BooleanField(default=False, verbose_name="Sudah Dibaca")
+    link = models.CharField(max_length=200, blank=True, null=True, verbose_name="Link URL")
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="Waktu Dibuat")
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Notifikasi"
+        verbose_name_plural = "Notifikasi"
+
+    def __str__(self):
+        return f"{self.title} - {self.user.username}"

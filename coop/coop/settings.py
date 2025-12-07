@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -77,10 +82,23 @@ WSGI_APPLICATION = 'coop.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'postgres'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'db.0ec90b57d6e95fcbda19832f.supabase.co'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
+
+# Fallback to SQLite if PostgreSQL not configured
+if not os.getenv('DB_PASSWORD'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -136,19 +154,36 @@ USE_TZ = True
 # Use absolute URL path for static files so templates generate '/static/...' URLs
 STATIC_URL = '/static/'
 
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-# For production, use SMTP:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-app-password'
+# Email Configuration (Microsoft Outlook)
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp-mail.outlook.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@prasetiyamulya.ac.id')
+KAPRODI_EMAIL = os.getenv('KAPRODI_EMAIL', 'kaprodi@prasetiyamulya.ac.id')
+MENTOR_EMAIL = os.getenv('MENTOR_EMAIL', 'mentor@prasetiyamulya.ac.id')
 
-DEFAULT_FROM_EMAIL = 'noreply@uts.ac.id'
-KAPRODI_EMAIL = 'kaprodi@uts.ac.id'
-MENTOR_EMAIL = 'mentor@uts.ac.id'
+# Firebase Configuration
+FIREBASE_API_KEY = os.getenv('FIREBASE_API_KEY', '')
+FIREBASE_AUTH_DOMAIN = os.getenv('FIREBASE_AUTH_DOMAIN', '')
+FIREBASE_PROJECT_ID = os.getenv('FIREBASE_PROJECT_ID', 'coop-stem')
+FIREBASE_STORAGE_BUCKET = os.getenv('FIREBASE_STORAGE_BUCKET', 'coop-stem.firebasestorage.app')
+FIREBASE_MESSAGING_SENDER_ID = os.getenv('FIREBASE_MESSAGING_SENDER_ID', '')
+FIREBASE_APP_ID = os.getenv('FIREBASE_APP_ID', '')
+FIREBASE_PRIVATE_KEY_ID = os.getenv('FIREBASE_PRIVATE_KEY_ID', '')
+FIREBASE_PRIVATE_KEY = os.getenv('FIREBASE_PRIVATE_KEY', '')
+FIREBASE_CLIENT_EMAIL = os.getenv('FIREBASE_CLIENT_EMAIL', '')
+FIREBASE_CLIENT_ID = os.getenv('FIREBASE_CLIENT_ID', '')
+FIREBASE_CERT_URL = os.getenv('FIREBASE_CERT_URL', '')
+
+# Brand Colors - STEM Universitas Prasetiya Mulya
+BRAND_PRIMARY_COLOR = '#002D72'  # Pantone 288 C - Deep Blue
+BRAND_SECONDARY_COLOR = '#0066CC'  # Lighter Blue
+BRAND_SUCCESS_COLOR = '#28A745'
+BRAND_WARNING_COLOR = '#FFC107'
+BRAND_DANGER_COLOR = '#DC3545'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
