@@ -1,0 +1,341 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooperative Education STEM - Prasetiya Mulya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --primary-blue: #002D72;
+            --light-blue: #0066CC;
+            --accent-color: #FFB81C;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: white;
+            padding: 100px 0 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,133.3C672,139,768,181,864,181.3C960,181,1056,139,1152,128C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+            background-size: cover;
+            background-position: bottom;
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .btn-custom-primary {
+            background-color: var(--accent-color);
+            color: var(--primary-blue);
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-custom-primary:hover {
+            background-color: #FFD54F;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 184, 28, 0.4);
+            color: var(--primary-blue);
+        }
+
+        .btn-custom-secondary {
+            background-color: transparent;
+            color: white;
+            padding: 12px 32px;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-custom-secondary:hover {
+            background-color: white;
+            color: var(--primary-blue);
+            transform: translateY(-2px);
+        }
+
+        .features-section {
+            padding: 80px 0;
+            background-color: #f8f9fa;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 1px solid #e0e0e0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0,45,114,0.15);
+        }
+
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--light-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-bottom: 15px;
+        }
+
+        .feature-description {
+            color: #666;
+            line-height: 1.7;
+        }
+
+        .info-section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .section-description {
+            font-size: 1.1rem;
+            color: #555;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 50px;
+            line-height: 1.8;
+        }
+
+        .footer {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 40px 0;
+            margin-top: 0;
+        }
+
+        .footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #FFD54F;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content text-center">
+                <h1 class="hero-title">Cooperative Education STEM</h1>
+                <p class="hero-subtitle">Program Magang Terintegrasi - Prasetiya Mulya University</p>
+                <p class="mb-4">Mempersiapkan mahasiswa menjadi profesional yang siap kerja melalui pengalaman praktis di industri</p>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{% url 'accounts:login' %}" class="btn-custom-primary">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </a>
+                    <a href="{% url 'accounts:register' %}" class="btn-custom-secondary">
+                        <i class="bi bi-person-plus me-2"></i>Daftar Sekarang
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="info-section">
+        <div class="container">
+            <h2 class="section-title">Tentang Cooperative Education</h2>
+            <p class="section-description">
+                Cooperative Education (Co-op) adalah program pendidikan yang mengintegrasikan pembelajaran akademik
+                dengan pengalaman kerja profesional. Program ini dirancang untuk memberikan mahasiswa STEM
+                kesempatan mengaplikasikan teori yang dipelajari di kelas ke dalam praktik industri nyata,
+                membangun jaringan profesional, dan mengembangkan keterampilan yang dibutuhkan di dunia kerja.
+            </p>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-briefcase"></i>
+                        </div>
+                        <h3 class="feature-title">Pengalaman Industri</h3>
+                        <p class="feature-description">
+                            Dapatkan pengalaman kerja langsung di perusahaan dan organisasi terkemuka,
+                            mengaplikasikan pengetahuan akademik dalam situasi profesional nyata.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <h3 class="feature-title">Pengembangan Karir</h3>
+                        <p class="feature-description">
+                            Bangun portofolio profesional, kembangkan keterampilan industri,
+                            dan tingkatkan peluang karir melalui bimbingan supervisor berpengalaman.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h3 class="feature-title">Networking</h3>
+                        <p class="feature-description">
+                            Perluas jaringan profesional dengan bertemu praktisi industri,
+                            mentor, dan sesama mahasiswa dalam program Co-op.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-4">
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <h3 class="feature-title">Laporan & Evaluasi</h3>
+                        <p class="feature-description">
+                            Sistem pelaporan terstruktur dengan evaluasi berkala untuk memastikan
+                            perkembangan dan pencapaian tujuan pembelajaran.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-award"></i>
+                        </div>
+                        <h3 class="feature-title">Sertifikasi</h3>
+                        <p class="feature-description">
+                            Dapatkan sertifikat resmi setelah menyelesaikan program Co-op
+                            sebagai bukti pengalaman dan kompetensi profesional.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon">
+                            <i class="bi bi-headset"></i>
+                        </div>
+                        <h3 class="feature-title">Dukungan Penuh</h3>
+                        <p class="feature-description">
+                            Didampingi oleh koordinator program dan supervisor yang siap
+                            membantu selama masa magang berlangsung.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <h5 class="mb-3"><i class="bi bi-mortarboard-fill me-2"></i>Cooperative Education STEM</h5>
+                    <p class="mb-0">Prasetiya Mulya University</p>
+                    <p class="mb-0">Building Future Leaders</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="mb-2">
+                        <i class="bi bi-envelope me-2"></i>
+                        <a href="mailto:coop@prasetiyamulya.ac.id">coop@prasetiyamulya.ac.id</a>
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-telephone me-2"></i>
+                        +62 21 xxxx xxxx
+                    </p>
+                    <p class="mt-3">
+                        &copy; 2024 Prasetiya Mulya University. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
