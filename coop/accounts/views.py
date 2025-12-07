@@ -9,6 +9,10 @@ from django.db import transaction
 from django.db.utils import IntegrityError
 from django.contrib.auth.decorators import login_required
 from .decorators import admin_required
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+from django.contrib.auth import update_session_auth_hash
 
 class CustomLoginView(LoginView):
     template_name = "accounts/login.html"
@@ -18,7 +22,9 @@ class CustomLoginView(LoginView):
         user = form.cleaned_data.get('user')
         login(self.request, user)
 
-        # Redirect berdasarkan role
+        if user.must_change_password:
+            return redirect(reverse("accounts:force_password_change"))
+
         if user.role == "mahasiswa":
             return redirect(reverse("coops:mahasiswa_dashboard"))
         elif user.role == "supervisor":
@@ -118,6 +124,86 @@ def custom_logout(request):
         logout(request)
         messages.success(request, f'Anda telah berhasil logout. Sampai jumpa, {user_name}!')
         return redirect('accounts:login')
-    
+
     # GET request - show confirmation
     return render(request, 'accounts/logout_confirm.html')
+
+
+def supervisor_password_reset_confirm(request, uidb64, token):
+    """
+    Handle password reset confirmation for supervisors.
+    Validates token and allows setting new password.
+    """
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            password = request.POST.get('password')
+            password_confirm = request.POST.get('password_confirm')
+
+            if not password or len(password) < 8:
+                messages.error(request, 'Password harus minimal 8 karakter.')
+                return render(request, 'accounts/password_reset_confirm.html', {'validlink': True})
+
+            if password != password_confirm:
+                messages.error(request, 'Password dan konfirmasi password tidak sama.')
+                return render(request, 'accounts/password_reset_confirm.html', {'validlink': True})
+
+            user.set_password(password)
+            user.must_change_password = False
+            user.save()
+
+            messages.success(request, 'Password berhasil diatur! Silakan login dengan password baru Anda.')
+            return redirect('accounts:login')
+
+        return render(request, 'accounts/password_reset_confirm.html', {'validlink': True})
+    else:
+        messages.error(request, 'Link reset password tidak valid atau sudah kadaluarsa.')
+        return render(request, 'accounts/password_reset_confirm.html', {'validlink': False})
+
+
+@login_required
+def force_password_change(request):
+    """
+    Force supervisor to change password on first login.
+    This view is called when must_change_password is True.
+    """
+    if not request.user.must_change_password:
+        if request.user.role == 'supervisor':
+            return redirect('jobs:supervisor_dashboard')
+        elif request.user.role == 'mahasiswa':
+            return redirect('coops:mahasiswa_dashboard')
+        return redirect('/')
+
+    if request.method == 'POST':
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if not new_password or len(new_password) < 8:
+            messages.error(request, 'Password baru harus minimal 8 karakter.')
+            return render(request, 'accounts/force_password_change.html')
+
+        if new_password != confirm_password:
+            messages.error(request, 'Password baru dan konfirmasi password tidak sama.')
+            return render(request, 'accounts/force_password_change.html')
+
+        request.user.set_password(new_password)
+        request.user.must_change_password = False
+        request.user.save()
+
+        update_session_auth_hash(request, request.user)
+
+        messages.success(request, 'Password berhasil diubah! Anda sekarang dapat menggunakan sistem.')
+
+        if request.user.role == 'supervisor':
+            return redirect('jobs:supervisor_dashboard')
+        elif request.user.role == 'mahasiswa':
+            return redirect('coops:mahasiswa_dashboard')
+        return redirect('/')
+
+    return render(request, 'accounts/force_password_change.html')

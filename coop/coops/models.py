@@ -13,6 +13,7 @@ class KonfirmasiMagang(models.Model):
     nama_supervisor = models.CharField(max_length=200)
     email_supervisor = models.EmailField()
     wa_supervisor = models.CharField(max_length=20, blank=True, null=True)
+    supervisor_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='supervised_magang', limit_choices_to={'role': 'supervisor'}, verbose_name="Supervisor Account")
     surat_penerimaan = models.URLField(max_length=500, verbose_name="Surat Penerimaan (Firebase URL)")
 
     status = models.CharField(max_length=20, choices=[

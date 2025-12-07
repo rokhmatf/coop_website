@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from accounts.decorators import mahasiswa_required
 from django.contrib import messages
-from .models import KonfirmasiMagang, LaporanKemajuan
-from accounts.models import Mahasiswa
+from .models import KonfirmasiMagang, LaporanKemajuan, Notification
+from accounts.models import Mahasiswa, User
 from django.http import HttpResponse
 from django.template import loader
 from .forms import WeeklyReportForm
@@ -11,6 +11,11 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from datetime import date, timedelta
+from .utils.supervisor_manager import create_supervisor_with_reset_link
+from .utils.email_sender import send_supervisor_welcome_email
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Mahasiswa isi konfirmasi magang
@@ -55,14 +60,70 @@ def konfirmasi_magang(request):
         if errors:
             for e in errors:
                 messages.error(request, e)
-            # kembalikan ke form, Anda mungkin ingin menyimpan field agar tetap tampil
             return render(request, "coops/konfirmasi_magang.html", {"form_values": request.POST})
 
-        # simpan ke model
-        # Jika sudah ada KonfirmasiMagang untuk user ini, update record
+        supervisor_user = None
+        is_new_supervisor = False
+
+        if email_supervisor and nama_supervisor:
+            try:
+                supervisor_user, is_new, token, uidb64 = create_supervisor_with_reset_link(
+                    email_supervisor=email_supervisor,
+                    nama_supervisor=nama_supervisor,
+                    wa_supervisor=wa_supervisor,
+                    nama_perusahaan=nama_perusahaan,
+                    bidang_usaha=bidang_usaha
+                )
+
+                if is_new:
+                    is_new_supervisor = True
+                    reset_url = request.build_absolute_uri(
+                        f'/accounts/reset-password/{uidb64}/{token}/'
+                    )
+
+                    try:
+                        mahasiswa = request.user.mahasiswa
+                    except:
+                        mahasiswa = None
+
+                    mahasiswa_info = {
+                        'nama': mahasiswa.nama if mahasiswa else request.user.get_full_name(),
+                        'prodi': mahasiswa.prodi if mahasiswa else 'N/A',
+                        'periode_awal': periode_awal,
+                        'periode_akhir': periode_akhir,
+                        'posisi': posisi,
+                        'nama_perusahaan': nama_perusahaan,
+                    }
+
+                    success, error_msg = send_supervisor_welcome_email(
+                        supervisor_user=supervisor_user,
+                        reset_url=reset_url,
+                        mahasiswa_info=mahasiswa_info
+                    )
+
+                    if success:
+                        logger.info(f"Welcome email sent to {email_supervisor}")
+                        messages.success(request, f"Email dengan link setup password telah dikirim ke {email_supervisor}")
+                    else:
+                        logger.error(f"Failed to send email: {error_msg}")
+                        messages.warning(request, "Akun supervisor dibuat, namun email gagal terkirim. Admin akan menghubungi supervisor.")
+
+                    admin_users = User.objects.filter(role='admin')
+                    for admin in admin_users:
+                        Notification.objects.create(
+                            user=admin,
+                            title="Akun Supervisor Baru Dibuat",
+                            message=f"Supervisor {nama_supervisor} untuk mahasiswa {request.user.get_full_name()} di {nama_perusahaan}",
+                            notification_type='info',
+                            link='/accounts/register-supervisor/'
+                        )
+
+            except Exception as e:
+                logger.error(f"Error creating supervisor: {str(e)}")
+                messages.warning(request, "Terjadi kesalahan saat membuat akun supervisor. Data tetap tersimpan.")
+
         km = KonfirmasiMagang.objects.filter(mahasiswa=request.user).first()
         if km:
-            # update existing
             km.periode_awal = periode_awal
             km.periode_akhir = periode_akhir
             km.posisi = posisi
@@ -72,16 +133,15 @@ def konfirmasi_magang(request):
             km.nama_supervisor = nama_supervisor
             km.email_supervisor = email_supervisor
             km.wa_supervisor = wa_supervisor
+            km.supervisor_user = supervisor_user
             if surat:
                 km.surat_penerimaan = surat
-            # keep current status (or reset to pending) — choose pending for re-submission
             km.status = 'pending'
             km.save()
             messages.success(request, "Konfirmasi magang berhasil diperbarui.")
         else:
-            # create new
             km = KonfirmasiMagang()
-            km.mahasiswa = request.user  # pastikan request.user adalah Mahasiswa terkait
+            km.mahasiswa = request.user
             km.periode_awal = periode_awal
             km.periode_akhir = periode_akhir
             km.posisi = posisi
@@ -91,9 +151,10 @@ def konfirmasi_magang(request):
             km.nama_supervisor = nama_supervisor
             km.email_supervisor = email_supervisor
             km.wa_supervisor = wa_supervisor
+            km.supervisor_user = supervisor_user
             if surat:
-                km.surat_penerimaan = surat  # field FileField di model
-            km.status = 'pending'  # contoh default status
+                km.surat_penerimaan = surat
+            km.status = 'pending'
             km.save()
             messages.success(request, "Konfirmasi magang berhasil dikirim.")
 

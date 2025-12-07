@@ -9,6 +9,7 @@ class Supervisor(models.Model):
     no_hp = models.CharField(max_length=15, blank=True, null=True)
     perusahaan = models.CharField(max_length=200, blank=True, null=True)
     bidang_usaha = models.CharField(max_length=200, blank=True, null=True)
+    created_automatically = models.BooleanField(default=False, verbose_name="Dibuat Otomatis")
 
     def __str__(self):
         return f"{self.nama} - {self.email} - {self.no_hp}"
