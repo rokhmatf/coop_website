@@ -242,11 +242,103 @@ def force_password_change(request):
 @login_required
 @kaprodi_required
 def kaprodi_dashboard(request):
+<<<<<<< HEAD
+    """Dashboard monitoring untuk Kaprodi"""
+    from coops.models import KonfirmasiMagang
+    from django.db.models import Q, Count
+
+    kaprodi = request.user.kaprodi_profile
+
+    # Get all mahasiswa from the same jurusan
+    mahasiswa_jurusan = Mahasiswa.objects.filter(jurusan=kaprodi.jurusan)
+
+    # Get all konfirmasi magang for mahasiswa in this jurusan
+    konfirmasi_jurusan = KonfirmasiMagang.objects.filter(
+        mahasiswa__mahasiswa__jurusan=kaprodi.jurusan
+    ).select_related('mahasiswa', 'mahasiswa__mahasiswa', 'approved_by')
+
+    # Statistics
+    total_mahasiswa = mahasiswa_jurusan.count()
+
+    # Count by status
+    pending_count = konfirmasi_jurusan.filter(status='pending').count()
+    accepted_count = konfirmasi_jurusan.filter(status='accepted').count()
+    rejected_count = konfirmasi_jurusan.filter(status='rejected').count()
+    completed_count = konfirmasi_jurusan.filter(status='completed').count()
+
+    # Mahasiswa yang belum ada konfirmasi magang
+    mahasiswa_with_konfirmasi = konfirmasi_jurusan.values_list('mahasiswa__id', flat=True)
+    mahasiswa_tanpa_magang = mahasiswa_jurusan.exclude(email__id__in=mahasiswa_with_konfirmasi).count()
+
+    # Recent activities (last 10 status changes)
+    recent_konfirmasi = konfirmasi_jurusan.order_by('-updated_at')[:10]
+
+    # Filter parameters
+    filter_status = request.GET.get('status', '')
+    filter_angkatan = request.GET.get('angkatan', '')
+    search_query = request.GET.get('search', '')
+
+    # Build filtered mahasiswa list
+    mahasiswa_list = mahasiswa_jurusan
+
+    if filter_angkatan:
+        mahasiswa_list = mahasiswa_list.filter(angkatan=filter_angkatan)
+
+    if search_query:
+        mahasiswa_list = mahasiswa_list.filter(
+            Q(nama__icontains=search_query) |
+            Q(nim__icontains=search_query)
+        )
+
+    # Prepare mahasiswa data with their konfirmasi status
+    mahasiswa_data = []
+    for mhs in mahasiswa_list:
+        try:
+            konfirmasi = KonfirmasiMagang.objects.filter(mahasiswa=mhs.email).first()
+
+            # Apply status filter
+            if filter_status:
+                if not konfirmasi or konfirmasi.status != filter_status:
+                    if filter_status != 'none' or konfirmasi:
+                        continue
+
+            mahasiswa_data.append({
+                'mahasiswa': mhs,
+                'konfirmasi': konfirmasi
+            })
+        except Exception:
+            # If no konfirmasi, add if filter is 'none' or no filter
+            if not filter_status or filter_status == 'none':
+                mahasiswa_data.append({
+                    'mahasiswa': mhs,
+                    'konfirmasi': None
+                })
+
+    # Get unique angkatan for filter dropdown
+    angkatan_list = mahasiswa_jurusan.values_list('angkatan', flat=True).distinct().order_by('-angkatan')
+
+    context = {
+        'kaprodi': kaprodi,
+        'title': 'Dashboard Kaprodi',
+        'total_mahasiswa': total_mahasiswa,
+        'pending_count': pending_count,
+        'accepted_count': accepted_count,
+        'rejected_count': rejected_count,
+        'completed_count': completed_count,
+        'mahasiswa_tanpa_magang': mahasiswa_tanpa_magang,
+        'mahasiswa_data': mahasiswa_data,
+        'recent_konfirmasi': recent_konfirmasi,
+        'angkatan_list': angkatan_list,
+        'filter_status': filter_status,
+        'filter_angkatan': filter_angkatan,
+        'search_query': search_query,
+=======
     """Temporary dashboard for Kaprodi"""
     kaprodi = request.user.kaprodi_profile
 
     context = {
         'kaprodi': kaprodi,
         'title': 'Dashboard Kaprodi'
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
     }
     return render(request, 'accounts/kaprodi_dashboard.html', context)

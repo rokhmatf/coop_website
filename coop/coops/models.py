@@ -23,6 +23,24 @@ class KonfirmasiMagang(models.Model):
         ('completed', 'Completed'),
     ], default='pending')
 
+<<<<<<< HEAD
+    # Approval tracking fields
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_magang',
+        limit_choices_to={'role': 'supervisor'},
+        verbose_name="Disetujui oleh"
+    )
+    approved_at = models.DateTimeField(null=True, blank=True, verbose_name="Tanggal Disetujui")
+    rejected_at = models.DateTimeField(null=True, blank=True, verbose_name="Tanggal Ditolak")
+    rejection_reason = models.TextField(blank=True, null=True, verbose_name="Alasan Penolakan")
+    approval_notes = models.TextField(blank=True, null=True, verbose_name="Catatan Persetujuan")
+
+=======
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
     # optional deadline for when the student must have secured a placement
     deadline = models.DateField(null=True, blank=True)
 
@@ -32,9 +50,39 @@ class KonfirmasiMagang(models.Model):
     # last time a reminder email was sent
     last_reminder_sent = models.DateTimeField(null=True, blank=True)
 
+<<<<<<< HEAD
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Tanggal Dibuat")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Tanggal Diubah")
+
     def __str__(self):
         return f"{self.mahasiswa.username} - {self.nama_perusahaan}"
 
+    def get_status_badge_class(self):
+        """Return Bootstrap badge class based on status"""
+        status_classes = {
+            'pending': 'bg-warning',
+            'accepted': 'bg-success',
+            'rejected': 'bg-danger',
+            'completed': 'bg-primary',
+        }
+        return status_classes.get(self.status, 'bg-secondary')
+
+    def get_status_display_name(self):
+        """Return user-friendly status name"""
+        status_names = {
+            'pending': 'Menunggu Persetujuan',
+            'accepted': 'Disetujui',
+            'rejected': 'Ditolak',
+            'completed': 'Selesai',
+        }
+        return status_names.get(self.status, self.status)
+
+=======
+    def __str__(self):
+        return f"{self.mahasiswa.username} - {self.nama_perusahaan}"
+
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
 
 class EvaluasiTemplate(models.Model):
     """Template evaluasi yang dibuat oleh admin untuk UTS/UAS"""

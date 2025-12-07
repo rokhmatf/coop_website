@@ -266,6 +266,31 @@ def approve_mahasiswa(request, konfirmasi_id):
     """Menerima atau menolak mahasiswa magang"""
     if request.user.role != 'supervisor':
         return JsonResponse({'error': 'Akses ditolak'}, status=403)
+<<<<<<< HEAD
+
+    konfirmasi = get_object_or_404(KonfirmasiMagang, id=konfirmasi_id)
+    supervisor = request.user.supervisor
+
+    if konfirmasi.email_supervisor != supervisor.email:
+        return JsonResponse({'error': 'Tidak memiliki akses'}, status=403)
+
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        catatan = request.POST.get('catatan', '')
+        rejection_reason = request.POST.get('rejection_reason', '')
+
+        if status in ['accepted', 'rejected']:
+            konfirmasi.status = status
+            konfirmasi.approved_by = request.user
+
+            if status == 'accepted':
+                konfirmasi.approved_at = timezone.now()
+                konfirmasi.approval_notes = catatan
+                konfirmasi.rejected_at = None
+                konfirmasi.rejection_reason = None
+
+                # Auto-create evaluations when student is accepted
+=======
     
     konfirmasi = get_object_or_404(KonfirmasiMagang, id=konfirmasi_id)
     supervisor = request.user.supervisor
@@ -283,6 +308,7 @@ def approve_mahasiswa(request, konfirmasi_id):
             
             # Auto-create evaluations when student is accepted
             if status == 'accepted':
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
                 from coops.models import EvaluasiTemplate
                 templates = EvaluasiTemplate.objects.filter(aktif=True)
                 for template in templates:
@@ -291,19 +317,76 @@ def approve_mahasiswa(request, konfirmasi_id):
                         template=template,
                         defaults={
                             'status': 'pending',
+<<<<<<< HEAD
+                            'jawaban': {}
+                        }
+                    )
+
+                # Send notification to mahasiswa
+                from coops.models import Notification
+                Notification.objects.create(
+                    user=konfirmasi.mahasiswa,
+                    title="Magang Disetujui!",
+                    message=f"Selamat! Magang Anda di {konfirmasi.nama_perusahaan} telah disetujui oleh supervisor. {catatan}",
+                    notification_type='success',
+                    link='/coops/mahasiswa_dashboard/'
+                )
+
+            else:
+                konfirmasi.rejected_at = timezone.now()
+                konfirmasi.rejection_reason = rejection_reason
+                konfirmasi.approval_notes = catatan
+                konfirmasi.approved_at = None
+
+                # Send notification to mahasiswa
+                from coops.models import Notification
+                Notification.objects.create(
+                    user=konfirmasi.mahasiswa,
+                    title="Magang Ditolak",
+                    message=f"Maaf, magang Anda di {konfirmasi.nama_perusahaan} ditolak. Alasan: {rejection_reason}. Silakan coba lagi atau hubungi supervisor untuk informasi lebih lanjut.",
+                    notification_type='danger',
+                    link='/coops/mahasiswa_dashboard/'
+                )
+
+            konfirmasi.save()
+
+            # Send notification to kaprodi if mahasiswa has jurusan
+            try:
+                mahasiswa_obj = konfirmasi.mahasiswa.mahasiswa
+                if mahasiswa_obj.jurusan:
+                    from accounts.models import Kaprodi
+                    kaprodis = Kaprodi.objects.filter(jurusan=mahasiswa_obj.jurusan)
+                    for kaprodi in kaprodis:
+                        from coops.models import Notification
+                        Notification.objects.create(
+                            user=kaprodi.user,
+                            title=f"Update Status Magang - {mahasiswa_obj.nama}",
+                            message=f"Mahasiswa {mahasiswa_obj.nama} ({mahasiswa_obj.nim}) telah {'diterima' if status == 'accepted' else 'ditolak'} magang di {konfirmasi.nama_perusahaan}.",
+                            notification_type='info',
+                            link='/accounts/kaprodi-dashboard/'
+                        )
+            except Exception:
+                pass
+
+=======
                             'jawaban': {}  # Empty dict as default
                         }
                     )
             
             # TODO: Kirim notifikasi email ke mahasiswa
             # respond with JSON for AJAX, otherwise redirect back with message
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
             success_message = f"Mahasiswa berhasil {'diterima' if status == 'accepted' else 'ditolak'}"
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': success_message})
             else:
                 messages.success(request, success_message)
                 return redirect('jobs:supervisor_dashboard')
+<<<<<<< HEAD
+
+=======
     
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 @login_required

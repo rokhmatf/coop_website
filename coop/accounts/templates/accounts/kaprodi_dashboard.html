@@ -85,22 +85,61 @@
 </div>
 
 <div class="row">
+<<<<<<< HEAD
+    <div class="col-md-3 mb-4">
+=======
     <div class="col-md-4 mb-4">
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
         <div class="stat-card" style="border-left-color: #0066CC;">
             <div class="stat-icon" style="background: rgba(0, 102, 204, 0.1); color: #0066CC;">
                 <i class="bi bi-people-fill"></i>
             </div>
+<<<<<<< HEAD
+            <h3 class="mb-1 fw-bold">{{ total_mahasiswa }}</h3>
+=======
             <h3 class="mb-1 fw-bold">-</h3>
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
             <p class="text-muted mb-0">Total Mahasiswa</p>
             <small class="text-muted">Jurusan {{ kaprodi.get_jurusan_display }}</small>
         </div>
     </div>
 
+<<<<<<< HEAD
+    <div class="col-md-3 mb-4">
+        <div class="stat-card" style="border-left-color: #FFC107;">
+            <div class="stat-icon" style="background: rgba(255, 193, 7, 0.1); color: #FFC107;">
+                <i class="bi bi-clock-fill"></i>
+            </div>
+            <h3 class="mb-1 fw-bold">{{ pending_count }}</h3>
+            <p class="text-muted mb-0">Pending</p>
+            <small class="text-muted">Menunggu persetujuan</small>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+=======
     <div class="col-md-4 mb-4">
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
         <div class="stat-card" style="border-left-color: #28A745;">
             <div class="stat-icon" style="background: rgba(40, 167, 69, 0.1); color: #28A745;">
                 <i class="bi bi-check-circle-fill"></i>
             </div>
+<<<<<<< HEAD
+            <h3 class="mb-1 fw-bold">{{ accepted_count }}</h3>
+            <p class="text-muted mb-0">Disetujui</p>
+            <small class="text-muted">Sedang aktif</small>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="stat-card" style="border-left-color: #6C757D;">
+            <div class="stat-icon" style="background: rgba(108, 117, 125, 0.1); color: #6C757D;">
+                <i class="bi bi-exclamation-circle-fill"></i>
+            </div>
+            <h3 class="mb-1 fw-bold">{{ mahasiswa_tanpa_magang }}</h3>
+            <p class="text-muted mb-0">Belum Magang</p>
+            <small class="text-muted">Belum mengajukan</small>
+=======
             <h3 class="mb-1 fw-bold">-</h3>
             <p class="text-muted mb-0">Persetujuan Pending</p>
             <small class="text-muted">Menunggu review</small>
@@ -115,6 +154,7 @@
             <h3 class="mb-1 fw-bold">-</h3>
             <p class="text-muted mb-0">Mahasiswa Magang</p>
             <small class="text-muted">Sedang aktif</small>
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
         </div>
     </div>
 </div>
@@ -180,6 +220,139 @@
     </div>
 </div>
 
+<<<<<<< HEAD
+<!-- Filter and Search Section -->
+<div class="info-card">
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <h4 class="mb-3">
+                <i class="bi bi-filter me-2 text-primary"></i>
+                Daftar Mahasiswa
+            </h4>
+        </div>
+    </div>
+
+    <form method="GET" class="row g-3 mb-4">
+        <div class="col-md-3">
+            <label class="form-label">Status Magang</label>
+            <select name="status" class="form-select">
+                <option value="">Semua Status</option>
+                <option value="none" {% if filter_status == 'none' %}selected{% endif %}>Belum Magang</option>
+                <option value="pending" {% if filter_status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="accepted" {% if filter_status == 'accepted' %}selected{% endif %}>Disetujui</option>
+                <option value="rejected" {% if filter_status == 'rejected' %}selected{% endif %}>Ditolak</option>
+                <option value="completed" {% if filter_status == 'completed' %}selected{% endif %}>Selesai</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Angkatan</label>
+            <select name="angkatan" class="form-select">
+                <option value="">Semua Angkatan</option>
+                {% for angkatan in angkatan_list %}
+                    <option value="{{ angkatan }}" {% if filter_angkatan == angkatan|stringformat:'s' %}selected{% endif %}>
+                        {{ angkatan }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Cari Mahasiswa</label>
+            <input type="text" name="search" class="form-control" placeholder="Nama atau NIM" value="{{ search_query }}">
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">&nbsp;</label>
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-search me-1"></i>Filter
+            </button>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>NIM</th>
+                    <th>Nama</th>
+                    <th>Angkatan</th>
+                    <th>Perusahaan</th>
+                    <th>Status</th>
+                    <th>Tanggal Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in mahasiswa_data %}
+                    <tr>
+                        <td><strong>{{ item.mahasiswa.nim }}</strong></td>
+                        <td>{{ item.mahasiswa.nama }}</td>
+                        <td>{{ item.mahasiswa.angkatan }}</td>
+                        <td>
+                            {% if item.konfirmasi %}
+                                {{ item.konfirmasi.nama_perusahaan }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.konfirmasi %}
+                                <span class="badge {{ item.konfirmasi.get_status_badge_class }}">
+                                    {{ item.konfirmasi.get_status_display_name }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">Belum Mengajukan</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.konfirmasi %}
+                                {{ item.konfirmasi.updated_at|date:"d M Y H:i"|default:"-" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                            <p class="mt-2 mb-0">Tidak ada data mahasiswa</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="info-card">
+    <h4 class="mb-3">
+        <i class="bi bi-clock-history me-2 text-primary"></i>
+        Aktivitas Terbaru
+    </h4>
+    <div class="list-group">
+        {% for konfirmasi in recent_konfirmasi %}
+            <div class="list-group-item">
+                <div class="d-flex w-100 justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">{{ konfirmasi.mahasiswa.mahasiswa.nama }}</h6>
+                        <p class="mb-1">
+                            <small>{{ konfirmasi.nama_perusahaan }}</small>
+                        </p>
+                        <small class="text-muted">{{ konfirmasi.updated_at|date:"d M Y H:i" }}</small>
+                    </div>
+                    <span class="badge {{ konfirmasi.get_status_badge_class }}">
+                        {{ konfirmasi.get_status_display_name }}
+                    </span>
+                </div>
+            </div>
+        {% empty %}
+            <div class="text-center text-muted py-4">
+                <p class="mb-0">Belum ada aktivitas</p>
+            </div>
+        {% endfor %}
+=======
 <div class="alert alert-info mt-4" role="alert">
     <div class="d-flex align-items-center">
         <div class="me-3">
@@ -189,6 +362,7 @@
             <h5 class="alert-heading mb-1">Fitur Kaprodi Dalam Pengembangan</h5>
             <p class="mb-0">Dashboard ini akan segera dilengkapi dengan fitur persetujuan magang, monitoring mahasiswa, dan laporan evaluasi.</p>
         </div>
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
     </div>
 </div>
 {% endblock %}

@@ -356,6 +356,24 @@
                         </span>
                       </td>
                       <td class="py-3">
+<<<<<<< HEAD
+                        <button class="btn btn-sm btn-success me-1"
+                                data-bs-toggle="modal"
+                                data-bs-target="#approvalModal"
+                                data-konfirmasi-id="{{ konfirmasi.id }}"
+                                data-mahasiswa-name="{{ konfirmasi.mahasiswa.get_full_name|default:konfirmasi.mahasiswa.username }}"
+                                data-action-type="accept">
+                          <i class="bi bi-check me-1"></i>Terima
+                        </button>
+                        <button class="btn btn-sm btn-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#approvalModal"
+                                data-konfirmasi-id="{{ konfirmasi.id }}"
+                                data-mahasiswa-name="{{ konfirmasi.mahasiswa.get_full_name|default:konfirmasi.mahasiswa.username }}"
+                                data-action-type="reject">
+                          <i class="bi bi-x me-1"></i>Tolak
+                        </button>
+=======
                         <form method="post" action="{% url 'jobs:approve_mahasiswa' konfirmasi.id %}" class="d-inline">
                           {% csrf_token %}
                           <input type="hidden" name="status" value="accepted">
@@ -366,6 +384,7 @@
                           <input type="hidden" name="status" value="rejected">
                           <button class="btn btn-sm btn-danger" type="submit"><i class="bi bi-x me-1"></i>Tolak</button>
                         </form>
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
                         <a class="btn btn-sm btn-outline-info ms-1" href="{% url 'jobs:lihat_laporan' konfirmasi.id %}"><i class="bi bi-file-text me-1"></i>Lihat Laporan</a>
                       </td>
                     </tr>
@@ -616,6 +635,62 @@
       </div> -->
     </div>
 
+<<<<<<< HEAD
+    <!-- Approval Modal (Updated with more fields) -->
+    <div class="modal fade" id="approvalModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="approvalModalLabel">
+              <i class="bi bi-check-circle me-2"></i>Konfirmasi Persetujuan
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="approvalForm" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+              <input type="hidden" name="konfirmasi_id" id="approval-konfirmasi-id">
+              <input type="hidden" name="status" id="approval-status">
+
+              <div class="mb-3">
+                <label class="fw-bold">Mahasiswa:</label>
+                <p id="approval-mahasiswa-name" class="mb-0"></p>
+              </div>
+
+              <div class="mb-3" id="approval-notes-group">
+                <label for="approval-notes" class="form-label">Catatan <span class="text-muted">(Opsional)</span></label>
+                <textarea
+                  class="form-control"
+                  id="approval-notes"
+                  name="catatan"
+                  rows="3"
+                  placeholder="Tambahkan catatan untuk mahasiswa..."></textarea>
+              </div>
+
+              <div class="mb-3" id="rejection-reason-group" style="display:none;">
+                <label for="rejection-reason" class="form-label">Alasan Penolakan <span class="text-danger">*</span></label>
+                <textarea
+                  class="form-control"
+                  id="rejection-reason"
+                  name="rejection_reason"
+                  rows="3"
+                  placeholder="Jelaskan alasan penolakan..."></textarea>
+                <small class="text-muted">Alasan ini akan dikirim ke mahasiswa</small>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="submit" class="btn" id="approval-submit-btn">
+                <i class="bi bi-check me-1"></i>Konfirmasi
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+=======
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       // Set progress bar widths from data-percent to avoid inline template vars in CSS
@@ -696,13 +771,101 @@
             });
             // Add active class to clicked item
             this.classList.add('active');
+<<<<<<< HEAD
+
+=======
             
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
             // Here you would load report details for the selected student
             // For now, just update the card header
             var studentName = this.querySelector('h6').textContent;
             document.querySelector('#reportModal .card-header h6').textContent = 'Laporan ' + studentName;
           });
         });
+<<<<<<< HEAD
+
+        // Handle approval modal trigger
+        var approvalModal = document.getElementById('approvalModal');
+        approvalModal.addEventListener('show.bs.modal', function (event) {
+          var button = event.relatedTarget;
+          var konfirmasiId = button.getAttribute('data-konfirmasi-id');
+          var mahasiswaName = button.getAttribute('data-mahasiswa-name');
+          var actionType = button.getAttribute('data-action-type');
+
+          // Update modal content
+          document.getElementById('approval-konfirmasi-id').value = konfirmasiId;
+          document.getElementById('approval-mahasiswa-name').textContent = mahasiswaName;
+          document.getElementById('approval-status').value = actionType === 'accept' ? 'accepted' : 'rejected';
+
+          var submitBtn = document.getElementById('approval-submit-btn');
+          var modalTitle = document.getElementById('approvalModalLabel');
+          var rejectionGroup = document.getElementById('rejection-reason-group');
+          var approvalNotesGroup = document.getElementById('approval-notes-group');
+
+          if (actionType === 'accept') {
+            modalTitle.innerHTML = '<i class="bi bi-check-circle me-2"></i>Terima Mahasiswa';
+            submitBtn.className = 'btn btn-success';
+            submitBtn.innerHTML = '<i class="bi bi-check me-1"></i>Terima Mahasiswa';
+            rejectionGroup.style.display = 'none';
+            approvalNotesGroup.style.display = 'block';
+            document.getElementById('rejection-reason').removeAttribute('required');
+          } else {
+            modalTitle.innerHTML = '<i class="bi bi-x-circle me-2"></i>Tolak Mahasiswa';
+            submitBtn.className = 'btn btn-danger';
+            submitBtn.innerHTML = '<i class="bi bi-x me-1"></i>Tolak Mahasiswa';
+            rejectionGroup.style.display = 'block';
+            approvalNotesGroup.style.display = 'block';
+            document.getElementById('rejection-reason').setAttribute('required', 'required');
+          }
+        });
+
+        // Handle approval form submission
+        document.getElementById('approvalForm').addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          var konfirmasiId = document.getElementById('approval-konfirmasi-id').value;
+          var status = document.getElementById('approval-status').value;
+          var catatan = document.getElementById('approval-notes').value;
+          var rejectionReason = document.getElementById('rejection-reason').value;
+
+          // Validate rejection reason if status is rejected
+          if (status === 'rejected' && !rejectionReason.trim()) {
+            alert('Alasan penolakan harus diisi');
+            return;
+          }
+
+          var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+          var formData = new URLSearchParams({
+            status: status,
+            catatan: catatan,
+            rejection_reason: rejectionReason
+          });
+
+          fetch('{% url "jobs:approve_mahasiswa" 0 %}'.replace('0', konfirmasiId), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': csrfToken
+            },
+            body: formData
+          }).then(function(res){
+            return res.json();
+          }).then(function(data){
+            if (data.success) {
+              var modal = bootstrap.Modal.getInstance(approvalModal);
+              modal.hide();
+              location.reload();
+            } else {
+              alert(data.error || 'Gagal melakukan aksi');
+            }
+          }).catch(function(error){
+            console.error('Error:', error);
+            alert('Terjadi kesalahan');
+          });
+        });
+=======
+>>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
       });
     </script>
   </body>
