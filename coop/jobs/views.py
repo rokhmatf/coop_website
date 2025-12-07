@@ -266,7 +266,6 @@ def approve_mahasiswa(request, konfirmasi_id):
     """Menerima atau menolak mahasiswa magang"""
     if request.user.role != 'supervisor':
         return JsonResponse({'error': 'Akses ditolak'}, status=403)
-<<<<<<< HEAD
 
     konfirmasi = get_object_or_404(KonfirmasiMagang, id=konfirmasi_id)
     supervisor = request.user.supervisor
@@ -290,25 +289,6 @@ def approve_mahasiswa(request, konfirmasi_id):
                 konfirmasi.rejection_reason = None
 
                 # Auto-create evaluations when student is accepted
-=======
-    
-    konfirmasi = get_object_or_404(KonfirmasiMagang, id=konfirmasi_id)
-    supervisor = request.user.supervisor
-    
-    if konfirmasi.email_supervisor != supervisor.email:
-        return JsonResponse({'error': 'Tidak memiliki akses'}, status=403)
-    
-    if request.method == 'POST':
-        status = request.POST.get('status')
-        catatan = request.POST.get('catatan', '')
-        
-        if status in ['accepted', 'rejected']:
-            konfirmasi.status = status
-            konfirmasi.save()
-            
-            # Auto-create evaluations when student is accepted
-            if status == 'accepted':
->>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
                 from coops.models import EvaluasiTemplate
                 templates = EvaluasiTemplate.objects.filter(aktif=True)
                 for template in templates:
@@ -317,7 +297,6 @@ def approve_mahasiswa(request, konfirmasi_id):
                         template=template,
                         defaults={
                             'status': 'pending',
-<<<<<<< HEAD
                             'jawaban': {}
                         }
                     )
@@ -368,25 +347,13 @@ def approve_mahasiswa(request, konfirmasi_id):
             except Exception:
                 pass
 
-=======
-                            'jawaban': {}  # Empty dict as default
-                        }
-                    )
-            
-            # TODO: Kirim notifikasi email ke mahasiswa
-            # respond with JSON for AJAX, otherwise redirect back with message
->>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
             success_message = f"Mahasiswa berhasil {'diterima' if status == 'accepted' else 'ditolak'}"
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'message': success_message})
             else:
                 messages.success(request, success_message)
                 return redirect('jobs:supervisor_dashboard')
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 @login_required

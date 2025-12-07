@@ -23,7 +23,6 @@ class KonfirmasiMagang(models.Model):
         ('completed', 'Completed'),
     ], default='pending')
 
-<<<<<<< HEAD
     # Approval tracking fields
     approved_by = models.ForeignKey(
         User,
@@ -39,8 +38,6 @@ class KonfirmasiMagang(models.Model):
     rejection_reason = models.TextField(blank=True, null=True, verbose_name="Alasan Penolakan")
     approval_notes = models.TextField(blank=True, null=True, verbose_name="Catatan Persetujuan")
 
-=======
->>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
     # optional deadline for when the student must have secured a placement
     deadline = models.DateField(null=True, blank=True)
 
@@ -50,7 +47,6 @@ class KonfirmasiMagang(models.Model):
     # last time a reminder email was sent
     last_reminder_sent = models.DateTimeField(null=True, blank=True)
 
-<<<<<<< HEAD
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Tanggal Dibuat")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Tanggal Diubah")
@@ -77,12 +73,6 @@ class KonfirmasiMagang(models.Model):
             'completed': 'Selesai',
         }
         return status_names.get(self.status, self.status)
-
-=======
-    def __str__(self):
-        return f"{self.mahasiswa.username} - {self.nama_perusahaan}"
-
->>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
 
 class EvaluasiTemplate(models.Model):
     """Template evaluasi yang dibuat oleh admin untuk UTS/UAS"""

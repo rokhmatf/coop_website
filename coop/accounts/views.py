@@ -242,7 +242,6 @@ def force_password_change(request):
 @login_required
 @kaprodi_required
 def kaprodi_dashboard(request):
-<<<<<<< HEAD
     """Dashboard monitoring untuk Kaprodi"""
     from coops.models import KonfirmasiMagang
     from django.db.models import Q, Count
@@ -332,13 +331,5 @@ def kaprodi_dashboard(request):
         'filter_status': filter_status,
         'filter_angkatan': filter_angkatan,
         'search_query': search_query,
-=======
-    """Temporary dashboard for Kaprodi"""
-    kaprodi = request.user.kaprodi_profile
-
-    context = {
-        'kaprodi': kaprodi,
-        'title': 'Dashboard Kaprodi'
->>>>>>> 85e3e31ec65f7120152caae6ad2dd1b07684e8a1
     }
     return render(request, 'accounts/kaprodi_dashboard.html', context)
