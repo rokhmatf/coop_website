@@ -1,0 +1,700 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Supervisor</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'dashboard.css' %}" />
+    <link rel="stylesheet" href="{% static 'navbar-sticky.css' %}" />
+  </head>
+  <body class="bg-light">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+          <i class="bi bi-person-check-fill me-2"></i>Dashboard Supervisor
+        </a>
+        <div class="navbar-nav ms-auto">
+          <div class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle me-1"></i>
+              {% if request.user.is_authenticated %}
+                {{ request.user.get_full_name|default:request.user.username }}
+              {% endif %}
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+              <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+            {% if forloop.first %}
+                <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+            {% endif %}
+            {% endfor %}
+        {% endif %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="container mt-4">
+      <!-- Header Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card shadow-sm border-0 bg-gradient">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <h2 class="mb-2">👨‍💼 Dashboard Supervisor</h2>
+                  <p class="mb-0 opacity-75">
+                    <i class="bi bi-info-circle me-2"></i>Kelola evaluasi dan supervisi mahasiswa magang
+                  </p>
+                </div>
+                <div class="col-md-4 text-center">
+                  <div class="avatar-circle">
+                    <i class="bi bi-clipboard-check" style="font-size: 3rem;"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+          <div class="card border-0 shadow-sm h-100 status-card">
+            <div class="card-body text-center">
+              <div class="icon-circle bg-primary text-white mb-3">
+                <i class="bi bi-people-fill"></i>
+              </div>
+              <h6 class="card-title">Total Mahasiswa</h6>
+              <h4 class="text-primary mb-0">{{ total_mahasiswa|default:0 }}</h4>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <div class="card border-0 shadow-sm h-100 status-card">
+            <div class="card-body text-center">
+              <div class="icon-circle bg-warning text-white mb-3">
+                <i class="bi bi-clock-fill"></i>
+              </div>
+              <h6 class="card-title">Evaluasi Pending</h6>
+              <h4 class="text-warning mb-0">{{ evaluasi_pending|default:0 }}</h4>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <div class="card border-0 shadow-sm h-100 status-card">
+            <div class="card-body text-center">
+              <div class="icon-circle bg-success text-white mb-3">
+                <i class="bi bi-check-circle-fill"></i>
+              </div>
+              <h6 class="card-title">Evaluasi Selesai</h6>
+              <h4 class="text-success mb-0">{{ evaluasi_completed|default:0 }}</h4>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <div class="card border-0 shadow-sm h-100 status-card">
+            <div class="card-body text-center">
+              <div class="icon-circle bg-info text-white mb-3">
+                <i class="bi bi-file-text-fill"></i>
+              </div>
+              <h6 class="card-title">Laporan Bulanan</h6>
+              <h4 class="text-info mb-0">{{ laporan_bulanan|default:0 }}</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom-0 py-3">
+              <h5 class="mb-0"><i class="bi bi-lightning-fill me-2 text-warning"></i>Aksi Cepat</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                {% if has_pending_evaluations %}
+                <div class="col-md-4 mb-3">
+                  <a href="#" class="btn btn-outline-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#evaluasiModal">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    <div>Isi Evaluasi</div>
+                    <small class="text-muted">UTS / UAS Mahasiswa</small>
+                  </a>
+                </div>
+                {% else %}
+                <div class="col-md-4 mb-3">
+                  <div class="btn btn-outline-secondary w-100 py-3 disabled">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <div>Semua Evaluasi Selesai</div>
+                    <small class="text-muted">Tidak ada evaluasi pending</small>
+                  </div>
+                </div>
+                {% endif %}
+                {% if mahasiswa_pending %}
+                <div class="col-md-4 mb-3">
+                  <a href="#" class="btn btn-outline-success w-100 py-3" data-bs-toggle="modal" data-bs-target="#approveModal">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <div>Terima Mahasiswa</div>
+                    <small class="text-muted">Konfirmasi Magang</small>
+                  </a>
+                </div>
+                {% else %}
+                <div class="col-md-4 mb-3">
+                  <div class="btn btn-outline-secondary w-100 py-3 disabled">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <div>Tidak Ada Pending</div>
+                    <small class="text-muted">Semua mahasiswa diproses</small>
+                  </div>
+                </div>
+                {% endif %}
+                <!-- <div class="col-md-4 mb-3">
+                  <a href="#" class="btn btn-outline-info w-100 py-3" data-bs-toggle="modal" data-bs-target="#reportModal">
+                    <i class="bi bi-file-text me-2"></i>
+                    <div>Lihat Laporan</div>
+                    <small class="text-muted">Kemajuan Mahasiswa</small>
+                  </a>
+                </div> -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evaluasi yang Perlu Diisi -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom-0 py-3">
+              <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Evaluasi yang Perlu Diisi</h5>
+            </div>
+            <div class="card-body">
+              <!-- Sample evaluations - in real implementation this would come from context -->
+              <div class="row">
+                {% if evaluasi_list and evaluasi_list|length > 0 %}
+                  {% for eval in evaluasi_list %}
+                    <div class="col-md-6 mb-3">
+                      <div class="card evaluation-card evaluation-pending">
+                        <div class="card-body">
+                          <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                              <h6 class="card-title">{{ eval.template.nama }} ({{ eval.template.get_jenis_display }})</h6>
+                              <p class="text-muted small mb-2">{{ eval.konfirmasi.mahasiswa.get_full_name|default:eval.konfirmasi.mahasiswa.username }}</p>
+                              <span class="badge bg-warning text-dark">{{ eval.get_status_display }}</span>
+                            </div>
+                            <div class="text-end">
+                              <small class="text-muted">Dibuat: {{ eval.created_at|date:"d M Y" }}</small>
+                              <br>
+                              <a href="{% url 'jobs:evaluasi_mahasiswa' eval.konfirmasi.id %}" class="btn btn-sm btn-warning mt-1">
+                                <i class="bi bi-pencil me-1"></i>Isi
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <div class="col-12">
+                    <div class="text-center text-muted py-4">Tidak ada evaluasi pending untuk Anda.</div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daftar Mahasiswa Bimbingan -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom-0 py-3">
+              <h5 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>Mahasiswa Bimbingan</h5>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="px-4 py-3">
+                        <i class="bi bi-person me-2"></i>Mahasiswa
+                      </th>
+                      <th class="py-3">
+                        <i class="bi bi-calendar me-2"></i>Periode
+                      </th>
+                      <th class="py-3">
+                        <i class="bi bi-briefcase me-2"></i>Posisi
+                      </th>
+                      <th class="py-3">
+                        <i class="bi bi-flag me-2"></i>Status Evaluasi
+                      </th>
+                      <th class="py-3">
+                        <i class="bi bi-gear me-2"></i>Aksi
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% comment %} Render accepted students first {% endcomment %}
+                    {% for item in mahasiswa_magang_with_status %}
+                    <tr>
+                      <td class="px-4 py-3">
+                        <div class="d-flex align-items-center">
+                          <div class="student-avatar me-3">
+                            <i class="bi bi-person text-muted"></i>
+                          </div>
+                          <div>
+                            <div class="fw-semibold">{{ item.konfirmasi.mahasiswa.get_full_name|default:item.konfirmasi.mahasiswa.username }}</div>
+                            <small class="text-muted">{{ item.konfirmasi.mahasiswa.nim|default:'' }}{% if item.konfirmasi.mahasiswa.prodi %} - {{ item.konfirmasi.mahasiswa.prodi }}{% endif %}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="py-3">
+                        <div class="small">
+                          {% if item.konfirmasi.periode_awal %}
+                            <i class="bi bi-calendar-event me-1"></i>{{ item.konfirmasi.periode_awal|date:"d M Y" }}
+                          {% endif %}
+                          {% if item.konfirmasi.periode_akhir %}
+                            <br><i class="bi bi-calendar-x me-1"></i>{{ item.konfirmasi.periode_akhir|date:"d M Y" }}
+                          {% endif %}
+                        </div>
+                      </td>
+                      <td class="py-3">
+                        <div class="fw-medium">{{ item.konfirmasi.posisi }}</div>
+                        <small class="text-muted">{{ item.konfirmasi.nama_perusahaan }}</small>
+                      </td>
+                      <td class="py-3">
+                        {% if item.all_evaluations_completed %}
+                          <span class="badge bg-success px-3 py-2">
+                            <i class="bi bi-check-circle-fill me-1"></i>Evaluasi Selesai
+                          </span>
+                        {% else %}
+                          <span class="badge bg-warning text-dark px-3 py-2">
+                            <i class="bi bi-clock me-1"></i>Evaluasi Pending ({{ item.completed_evaluations }}/{{ item.total_evaluations }})
+                          </span>
+                        {% endif %}
+                      </td>
+                      <td class="py-3">
+                          {% if not item.all_evaluations_completed %}
+                            <a class="btn btn-sm btn-outline-primary me-1" href="{% url 'jobs:evaluasi_mahasiswa' item.konfirmasi.id %}"><i class="bi bi-pencil me-1"></i>Isi Evaluasi</a>
+                          {% else %}
+                            <span class="btn btn-sm btn-success me-1 disabled"><i class="bi bi-check-circle me-1"></i>Evaluasi Selesai</span>
+                          {% endif %}
+                          <a class="btn btn-sm btn-outline-info" href="{% url 'jobs:lihat_laporan' item.konfirmasi.id %}"><i class="bi bi-file-text me-1"></i>Lihat Laporan</a>
+                          <form method="post" action="{% url 'jobs:selesai_konfirmasi' item.konfirmasi.id %}" class="d-inline" onsubmit="return confirm('Yakin ingin menyelesaikan proses untuk mahasiswa ini?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-warning"><i class="bi bi-trash me-1"></i>Selesaikan</button>
+                          </form>
+                      </td>
+                    </tr>
+                    {% endfor %}
+
+                    {% comment %} Render pending students (need approval) {% endcomment %}
+                    {% for konfirmasi in mahasiswa_pending %}
+                    <tr>
+                      <td class="px-4 py-3">
+                        <div class="d-flex align-items-center">
+                          <div class="student-avatar me-3">
+                            <i class="bi bi-person text-muted"></i>
+                          </div>
+                          <div>
+                            <div class="fw-semibold">{{ konfirmasi.mahasiswa.get_full_name|default:konfirmasi.mahasiswa.username }}</div>
+                            <small class="text-muted">{{ konfirmasi.mahasiswa.nim|default:'' }}{% if konfirmasi.mahasiswa.prodi %} - {{ konfirmasi.mahasiswa.prodi }}{% endif %}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="py-3">
+                        <div class="small">
+                          {% if konfirmasi.periode_awal %}
+                            <i class="bi bi-calendar-event me-1"></i>{{ konfirmasi.periode_awal|date:"d M Y" }}
+                          {% endif %}
+                          {% if konfirmasi.periode_akhir %}
+                            <br><i class="bi bi-calendar-x me-1"></i>{{ konfirmasi.periode_akhir|date:"d M Y" }}
+                          {% endif %}
+                        </div>
+                      </td>
+                      <td class="py-3">
+                        <div class="fw-medium">{{ konfirmasi.posisi }}</div>
+                        <small class="text-muted">{{ konfirmasi.nama_perusahaan }}</small>
+                      </td>
+                      <td class="py-3">
+                        <span class="badge bg-warning text-dark px-3 py-2">
+                          <i class="bi bi-clock me-1"></i>Pending
+                        </span>
+                      </td>
+                      <td class="py-3">
+                        <form method="post" action="{% url 'jobs:approve_mahasiswa' konfirmasi.id %}" class="d-inline">
+                          {% csrf_token %}
+                          <input type="hidden" name="status" value="accepted">
+                          <button class="btn btn-sm btn-success me-1" type="submit"><i class="bi bi-check me-1"></i>Terima</button>
+                        </form>
+                        <form method="post" action="{% url 'jobs:approve_mahasiswa' konfirmasi.id %}" class="d-inline">
+                          {% csrf_token %}
+                          <input type="hidden" name="status" value="rejected">
+                          <button class="btn btn-sm btn-danger" type="submit"><i class="bi bi-x me-1"></i>Tolak</button>
+                        </form>
+                        <a class="btn btn-sm btn-outline-info ms-1" href="{% url 'jobs:lihat_laporan' konfirmasi.id %}"><i class="bi bi-file-text me-1"></i>Lihat Laporan</a>
+                      </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="5" class="text-center text-muted py-4">Tidak ada mahasiswa.</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Evaluasi -->
+      <!-- <div class="row mb-4">
+        <div class="col-12">
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom-0 py-3">
+              <h5 class="mb-0"><i class="bi bi-clipboard-data me-2 text-info"></i>Status Evaluasi</h5>
+            </div>
+            <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <h6 class="text-muted">UTS - Laporan Kemajuan</h6>
+                        <div class="progress mb-2" style="height: 8px;">
+                          <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" data-percent="{{ uts_percent|default_if_none:0|floatformat:0 }}" aria-valuenow="{{ uts_percent|default_if_none:0|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                          <small class="text-muted">{{ uts_completed }} dari {{ uts_total }} evaluasi selesai</small>
+                          <small class="text-success">{{ uts_percent }}%</small>
+                        </div>
+                      </div>
+
+                      <div class="col-md-6 mb-3">
+                        <h6 class="text-muted">UAS - Laporan Akhir</h6>
+                        <div class="progress mb-2" style="height: 8px;">
+                          <div class="progress-bar bg-warning" role="progressbar" style="width: 0%;" data-percent="{{ uas_percent|default_if_none:0|floatformat:0 }}" aria-valuenow="{{ uas_percent|default_if_none:0|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                          <small class="text-muted">{{ uas_completed }} dari {{ uas_total }} evaluasi selesai</small>
+                          <small class="text-warning">{{ uas_percent }}%</small>
+                        </div>
+                      </div>
+                    </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Modal Evaluasi -->
+    <div class="modal fade" id="evaluasiModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-pencil-square me-2"></i>Form Evaluasi
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="quick-evaluasi-form" method="get">
+              <div class="mb-3">
+                <label class="form-label">Pilih Mahasiswa</label>
+                <select id="quick-evaluasi-student" class="form-select" required>
+                  <option value="">-- Pilih Mahasiswa --</option>
+                  {% for item in mahasiswa_magang_with_status %}
+                    {% if not item.all_evaluations_completed %}
+                      <option value="{{ item.konfirmasi.id }}">{{ item.konfirmasi.mahasiswa.get_full_name|default:item.konfirmasi.mahasiswa.username }} - {{ item.konfirmasi.posisi }} ({{ item.completed_evaluations }}/{{ item.total_evaluations }} selesai)</option>
+                    {% endif %}
+                  {% endfor %}
+                  {% if not mahasiswa_magang_with_status %}
+                    <option value="" disabled>Tidak ada mahasiswa dengan evaluasi pending</option>
+                  {% endif %}
+                </select>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Jenis Evaluasi</label>
+                <select id="quick-evaluasi-type" class="form-select" required>
+                  <option value="">-- Pilih Jenis --</option>
+                  {% for t in evaluasi_templates %}
+                    <option value="{{ t.id }}">{{ t.nama }} ({{ t.get_jenis_display }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Penilaian Kinerja (1-10)</label>
+                <input type="range" class="form-range" min="1" max="10" value="8">
+                <div class="d-flex justify-content-between">
+                  <small>1</small>
+                  <small>10</small>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Catatan Evaluasi</label>
+                <textarea class="form-control" rows="4" placeholder="Berikan evaluasi dan feedback untuk mahasiswa..."></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Rekomendasi</label>
+                <select class="form-select">
+                  <option>Sangat Memuaskan</option>
+                  <option>Memuaskan</option>
+                  <option>Cukup</option>
+                  <option>Perlu Perbaikan</option>
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-primary">
+              <i class="bi bi-check-circle me-1"></i>Simpan Evaluasi
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Approve -->
+    <div class="modal fade" id="approveModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-check-circle me-2"></i>Konfirmasi Penerimaan
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="quick-approve-form" method="post">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label">Pilih Mahasiswa</label>
+                <select id="quick-approve-student" name="konfirmasi_id" class="form-select" required>
+                  <option value="">-- Pilih Mahasiswa --</option>
+                  {% for k in konfirmasi_all %}
+                    {% if k.status == 'pending' %}
+                      <option value="{{ k.id }}">{{ k.mahasiswa.get_full_name|default:k.mahasiswa.username }} - {{ k.posisi }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select id="quick-approve-status" name="status" class="form-select" required>
+                  <option value="accepted">Terima</option>
+                  <option value="rejected">Tolak</option>
+                </select>
+              </div>
+
+            <div class="mb-3">
+              <label class="form-label">Catatan</label>
+              <textarea class="form-control" rows="3" placeholder="Berikan catatan atau alasan..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-success">
+              <i class="bi bi-check me-1"></i>Konfirmasi
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Report -->
+    <!-- <div class="modal fade" id="reportModal" tabindex="-1">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-file-text me-2"></i>Laporan Kemajuan Mahasiswa
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+                <div class="col-md-4">
+                  <div class="list-group">
+                    {% for k in konfirmasi_all %}
+                      <a href="#" class="list-group-item list-group-item-action {% if forloop.first %}active{% endif %}" data-konfirmasi-id="{{ k.id }}">
+                        <div class="d-flex w-100 justify-content-between">
+                          <h6 class="mb-1">{{ k.mahasiswa.get_full_name|default:k.mahasiswa.username }}</h6>
+                          {% if k.status == 'accepted' %}
+                            <small class="text-success">Aktif</small>
+                          {% else %}
+                            <small class="text-warning">Pending</small>
+                          {% endif %}
+                        </div>
+                        <p class="mb-1">{{ k.posisi }}</p>
+                        <small>{{ k.weekly_reports.count }} laporan tersedia</small>
+                      </a>
+                    {% empty %}
+                      <div class="text-muted p-3">Tidak ada mahasiswa untuk ditampilkan</div>
+                    {% endfor %}
+                  </div>
+                </div>
+              <div class="col-md-8">
+                <div class="card">
+                  <div class="card-header">
+                    <h6 class="mb-0">Laporan Bulan Oktober 2025</h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="mb-3">
+                      <h6 class="text-muted">Profil Perusahaan</h6>
+                      <p class="small">PT. Tech Solutions adalah perusahaan teknologi yang bergerak di bidang pengembangan software...</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <h6 class="text-muted">Jobdesk</h6>
+                      <p class="small">Mengembangkan frontend aplikasi web menggunakan React.js, mengimplementasikan design UI/UX...</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <h6 class="text-muted">Suasana Lingkungan Pekerjaan</h6>
+                      <p class="small">Lingkungan kerja yang kondusif dengan tim yang supportif dan mentor yang berpengalaman...</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <h6 class="text-muted">Manfaat Perkuliahan</h6>
+                      <p class="small">Konsep pemrograman web, database design, dan software engineering yang dipelajari sangat membantu...</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <h6 class="text-muted">Kebutuhan Pembelajaran</h6>
+                      <p class="small">Perlu penambahan materi tentang cloud computing dan DevOps yang banyak digunakan di industri...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            <button type="button" class="btn btn-primary">
+              <i class="bi bi-download me-1"></i>Download PDF
+            </button>
+          </div>
+        </div>
+      </div> -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Set progress bar widths from data-percent to avoid inline template vars in CSS
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.progress-bar[data-percent]').forEach(function(pb) {
+          var p = parseInt(pb.getAttribute('data-percent')) || 0;
+          pb.style.width = p + '%';
+          pb.setAttribute('aria-valuenow', p);
+        });
+        
+        // Quick-evaluasi: redirect to evaluasi form with konfirmasi and template
+        document.getElementById('evaluasiModal').addEventListener('hidden.bs.modal', function () {
+          // Reset form when modal is closed
+          document.getElementById('quick-evaluasi-student').value = '';
+          document.getElementById('quick-evaluasi-type').value = '';
+        });
+
+        // Handle quick evaluation form submission
+        document.querySelector('#evaluasiModal .btn-primary').addEventListener('click', function(e) {
+          e.preventDefault();
+          var konfirmasiId = document.getElementById('quick-evaluasi-student').value;
+          var templateId = document.getElementById('quick-evaluasi-type').value;
+          
+          if (!konfirmasiId || !templateId) {
+            alert('Pilih mahasiswa dan jenis evaluasi terlebih dahulu');
+            return;
+          }
+          
+          // Navigate to evaluation page
+          window.location.href = '{% url "jobs:evaluasi_mahasiswa" 0 %}'.replace('0', konfirmasiId) + '?template=' + templateId;
+        });
+
+        // Handle quick approval form submission
+        document.querySelector('#approveModal .btn-success').addEventListener('click', function(e) {
+          e.preventDefault();
+          var konfirmasiId = document.getElementById('quick-approve-student').value;
+          var status = document.getElementById('quick-approve-status').value;
+          
+          if (!konfirmasiId || !status) {
+            alert('Pilih mahasiswa dan status terlebih dahulu');
+            return;
+          }
+
+          // Get CSRF token
+          var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+          fetch('{% url "jobs:approve_mahasiswa" 0 %}'.replace('0', konfirmasiId), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': csrfToken
+            },
+            body: new URLSearchParams({status: status}).toString()
+          }).then(function(res){
+            return res.json();
+          }).then(function(data){
+            if (data.success) {
+              // Close modal and reload page
+              var modal = bootstrap.Modal.getInstance(document.getElementById('approveModal'));
+              modal.hide();
+              location.reload();
+            } else {
+              alert(data.error || 'Gagal melakukan aksi');
+            }
+          }).catch(function(){
+            alert('Terjadi kesalahan');
+          });
+        });
+
+        // Report modal functionality (basic implementation)
+        document.querySelectorAll('#reportModal .list-group-item').forEach(function(item) {
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Remove active class from all items
+            document.querySelectorAll('#reportModal .list-group-item').forEach(function(i) {
+              i.classList.remove('active');
+            });
+            // Add active class to clicked item
+            this.classList.add('active');
+            
+            // Here you would load report details for the selected student
+            // For now, just update the card header
+            var studentName = this.querySelector('h6').textContent;
+            document.querySelector('#reportModal .card-header h6').textContent = 'Laporan ' + studentName;
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
