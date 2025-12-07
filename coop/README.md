@@ -19,6 +19,7 @@ Sistem manajemen program Cooperative Education untuk STEM Universitas Prasetiya 
 - 📈 Laporan Kemajuan Bulanan
 - 📄 Laporan Akhir
 - ⭐ Evaluasi Supervisor (UTS & UAS)
+- ⏰ Evaluation Period Control System
 - 🏆 Generate Sertifikat Digital dengan QR Code
 - 📧 Email Notification System (Microsoft Outlook)
 - 🔔 In-App Notifications

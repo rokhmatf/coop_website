@@ -94,7 +94,42 @@ Dokumen ini berisi detail implementasi fitur-fitur yang telah diselesaikan untuk
 - Nomor sertifikat unik
 - Signature placeholders
 
-### 5. Firebase Storage Integration
+### 5. Evaluation Period Control System
+
+**Status:** ✅ Selesai
+
+**Komponen yang Dibuat:**
+- Period control fields untuk EvaluasiTemplate (periode_mulai, periode_selesai, auto_distribute)
+- Helper methods untuk checking period status
+- Admin interface untuk mengatur periode evaluasi
+- Validation di supervisor views untuk enforce periode restrictions
+- Visual indicators untuk period status di templates
+- Automatic blocking of form submission outside evaluation period
+
+**File yang Dibuat/Dimodifikasi:**
+- `coops/models.py` - Ditambahkan period control fields dan helper methods
+- `coops/admin.py` - Enhanced admin interface dengan period management
+- `coops/migrations/0010_add_evaluation_period_control.py` - Database migration
+- `jobs/views.py` - Added period validation logic
+- `jobs/templates/jobs/evaluasi_form.html` - Enhanced dengan period status display
+- `jobs/templates/jobs/supervisor_dashboard.html` - Added period status indicators
+- `jobs/static/dashboard.css` - Added styling untuk unavailable evaluations
+
+**Fitur:**
+- Admin dapat set periode mulai dan selesai untuk setiap template evaluasi
+- Status periode ditampilkan dengan color coding (tidak ada batasan, belum dimulai, aktif, sudah berakhir)
+- Supervisor tidak dapat mengisi evaluasi di luar periode yang ditentukan
+- Form submission di-block otomatis jika di luar periode
+- Visual feedback yang jelas tentang status periode evaluasi
+- Evaluasi yang tidak dalam periode aktif ditampilkan dengan disabled state
+
+**Helper Methods:**
+- `is_period_active()` - Check if evaluation period is currently active
+- `period_status()` - Get current period status (no_period, not_started, active, ended)
+- `period_status_display()` - Get human-readable period status
+- `can_be_filled()` - Check if evaluation can be filled by supervisor
+
+### 6. Firebase Storage Integration
 
 **Status:** ✅ Selesai
 
@@ -287,7 +322,30 @@ Notifications akan otomatis muncul di bell icon di navbar. User bisa:
 2. Mahasiswa dapat download dari `/coops/download-sertifikat/<id>/`
 3. PDF akan terdownload dengan format landscape A4
 
-### 5. Firebase Storage
+### 5. Evaluation Period Control (Admin)
+
+Untuk mengatur periode evaluasi:
+
+1. Login sebagai admin
+2. Buka Django Admin panel
+3. Navigate ke "Evaluasi templates"
+4. Pilih template evaluasi yang ingin diatur periodenya
+5. Set "Periode Mulai" dan "Periode Selesai" (opsional)
+6. Jika tidak diset, evaluasi dapat diisi kapan saja
+7. Save template
+
+Supervisor akan otomatis:
+- Melihat status periode di dashboard
+- Tidak dapat mengisi evaluasi di luar periode yang ditentukan
+- Mendapat notifikasi visual tentang status periode
+
+**Status Periode:**
+- **Tidak ada batasan periode** (abu-abu): Evaluasi dapat diisi kapan saja
+- **Belum dimulai** (orange): Periode belum dimulai
+- **Aktif** (hijau): Evaluasi dapat diisi sekarang
+- **Sudah berakhir** (merah): Periode sudah berakhir
+
+### 6. Firebase Storage
 
 Untuk menggunakan Firebase storage helper:
 

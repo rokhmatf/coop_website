@@ -37,6 +37,10 @@ body{
   .evaluation-completed {
     border-left-color: #198754;
   }
+  .evaluation-unavailable {
+    border-left-color: #6c757d;
+    opacity: 0.7;
+  }
   .student-avatar {
     width: 40px;
     height: 40px;

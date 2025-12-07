@@ -47,8 +47,62 @@ class EvaluasiTemplate(models.Model):
     aktif = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    periode_mulai = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Periode Mulai',
+        help_text='Tanggal dan waktu mulai periode pengisian evaluasi'
+    )
+    periode_selesai = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Periode Selesai',
+        help_text='Tanggal dan waktu akhir periode pengisian evaluasi'
+    )
+    auto_distribute = models.BooleanField(
+        default=False,
+        verbose_name='Auto Distribute',
+        help_text='Otomatis distribute evaluasi ke supervisor saat periode dimulai'
+    )
+
     def __str__(self):
         return f"{self.nama} ({self.get_jenis_display()})"
+
+    def is_period_active(self):
+        """Check if evaluation period is currently active"""
+        if not self.periode_mulai or not self.periode_selesai:
+            return True
+        now = timezone.now()
+        return self.periode_mulai <= now <= self.periode_selesai
+
+    def period_status(self):
+        """Get current period status: 'not_started', 'active', 'ended', or 'no_period'"""
+        if not self.periode_mulai or not self.periode_selesai:
+            return 'no_period'
+        now = timezone.now()
+        if now < self.periode_mulai:
+            return 'not_started'
+        elif now > self.periode_selesai:
+            return 'ended'
+        else:
+            return 'active'
+
+    def period_status_display(self):
+        """Get human-readable period status"""
+        status = self.period_status()
+        status_map = {
+            'no_period': 'Tidak ada batasan periode',
+            'not_started': 'Belum dimulai',
+            'active': 'Aktif',
+            'ended': 'Sudah berakhir'
+        }
+        return status_map.get(status, 'Unknown')
+
+    def can_be_filled(self):
+        """Check if evaluation can be filled by supervisor"""
+        if not self.aktif:
+            return False
+        return self.is_period_active()
 
 
 class EvaluasiSupervisor(models.Model):

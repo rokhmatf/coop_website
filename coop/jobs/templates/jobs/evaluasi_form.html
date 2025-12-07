@@ -142,19 +142,53 @@
                     <select name="template_id" class="form-select" id="template_id" required onchange="loadTemplateQuestions()">
                       <option value="">-- Pilih Jenis Evaluasi --</option>
                       {% for template in templates %}
-                        <option value="{{ template.id }}" 
+                        <option value="{{ template.id }}"
                                 data-questions="{{ template.pertanyaan|default:'[]' }}"
                                 {% if selected_template and template.id == selected_template.id %}selected{% endif %}>
                           {{ template.nama }} ({{ template.get_jenis_display }})
                         </option>
                       {% endfor %}
                     </select>
-                  {% else %}
-                    <div class="alert alert-warning">
-                      <i class="bi bi-info-circle me-2"></i>
-                      <strong>Semua evaluasi telah selesai!</strong><br>
-                      Tidak ada template evaluasi yang tersedia untuk mahasiswa ini. Semua evaluasi (UTS dan UAS) sudah diselesaikan.
+
+                    {% if unavailable_templates %}
+                    <div class="mt-3 alert alert-warning">
+                      <h6><i class="bi bi-exclamation-triangle me-2"></i>Evaluasi Belum Tersedia:</h6>
+                      <ul class="mb-0">
+                        {% for template in unavailable_templates %}
+                          <li>
+                            <strong>{{ template.nama }} ({{ template.get_jenis_display }})</strong> - {{ template.period_status_display }}
+                            {% if template.periode_mulai and template.periode_selesai %}
+                              <br><small class="text-muted">Periode: {{ template.periode_mulai|date:"d M Y H:i" }} - {{ template.periode_selesai|date:"d M Y H:i" }}</small>
+                            {% endif %}
+                          </li>
+                        {% endfor %}
+                      </ul>
                     </div>
+                    {% endif %}
+                  {% else %}
+                    {% if unavailable_templates %}
+                      <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Evaluasi Belum Tersedia!</strong><br>
+                        Semua evaluasi masih di luar periode pengisian atau sudah selesai.
+                        <ul class="mt-2 mb-0">
+                          {% for template in unavailable_templates %}
+                            <li>
+                              <strong>{{ template.nama }} ({{ template.get_jenis_display }})</strong> - {{ template.period_status_display }}
+                              {% if template.periode_mulai and template.periode_selesai %}
+                                <br><small class="text-muted">Periode: {{ template.periode_mulai|date:"d M Y H:i" }} - {{ template.periode_selesai|date:"d M Y H:i" }}</small>
+                              {% endif %}
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    {% else %}
+                      <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <strong>Semua evaluasi telah selesai!</strong><br>
+                        Tidak ada template evaluasi yang tersedia untuk mahasiswa ini. Semua evaluasi (UTS dan UAS) sudah diselesaikan.
+                      </div>
+                    {% endif %}
                     <select class="form-select" disabled>
                       <option>-- Tidak ada evaluasi yang tersedia --</option>
                     </select>

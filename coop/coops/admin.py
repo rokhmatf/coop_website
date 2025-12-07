@@ -5,6 +5,7 @@ from .models import (
 )
 from django.conf import settings
 from django.utils import timezone
+from django.utils.html import format_html
 from django.http import HttpResponse
 from django.contrib import messages
 import csv
@@ -62,10 +63,36 @@ class DeadlineReminderAdmin(admin.ModelAdmin):
 
 @admin.register(EvaluasiTemplate)
 class EvaluasiTemplateAdmin(admin.ModelAdmin):
-    list_display = ('nama', 'jenis', 'aktif', 'created_at', 'get_pending_count', 'get_completed_count')
-    list_filter = ('jenis', 'aktif')
+    list_display = ('nama', 'jenis', 'aktif', 'get_period_status', 'periode_mulai', 'periode_selesai', 'auto_distribute', 'get_pending_count', 'get_completed_count')
+    list_filter = ('jenis', 'aktif', 'auto_distribute')
     search_fields = ('nama',)
     actions = ['send_evaluations_to_supervisors', 'download_evaluation_results']
+    fieldsets = (
+        (None, {
+            'fields': ('nama', 'jenis', 'pertanyaan', 'aktif')
+        }),
+        ('Kontrol Periode Evaluasi', {
+            'fields': ('periode_mulai', 'periode_selesai', 'auto_distribute'),
+            'description': 'Set periode evaluasi untuk mengontrol kapan supervisor dapat mengisi evaluasi. Jika kosong, evaluasi dapat diisi kapan saja.'
+        }),
+    )
+
+    def get_period_status(self, obj):
+        """Display period status with color coding"""
+        status = obj.period_status()
+        colors = {
+            'no_period': 'gray',
+            'not_started': 'orange',
+            'active': 'green',
+            'ended': 'red'
+        }
+        color = colors.get(status, 'gray')
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            obj.period_status_display()
+        )
+    get_period_status.short_description = 'Status Periode'
 
     def get_pending_count(self, obj):
         """Jumlah evaluasi yang belum diisi"""

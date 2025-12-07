@@ -111,11 +111,20 @@ def supervisor_dashboard(request):
             'all_evaluations_completed': all_evaluations_completed
         })
     
-    # Evaluasi yang harus diisi
+    # Evaluasi yang harus diisi - only show those within active period
     evaluasi_list = EvaluasiSupervisor.objects.filter(
         konfirmasi__in=konfirmasi_all,
         status='pending'
-    ).select_related('konfirmasi__mahasiswa', 'template')[:5]
+    ).select_related('konfirmasi__mahasiswa', 'template')
+
+    # Filter evaluasi by period status
+    evaluasi_list_filtered = []
+    for evaluasi in evaluasi_list:
+        evaluasi.period_active = evaluasi.template.can_be_filled()
+        evaluasi.period_status = evaluasi.template.period_status_display()
+        evaluasi_list_filtered.append(evaluasi)
+
+    evaluasi_list = evaluasi_list_filtered[:5]
 
     # Overall evaluation counts and breakdown by type (UTS/UAS)
     total_evaluasi = EvaluasiSupervisor.objects.filter(konfirmasi__in=mahasiswa_magang).count()
@@ -174,11 +183,22 @@ def evaluasi_mahasiswa(request, konfirmasi_id):
         konfirmasi=konfirmasi,
         status='completed'
     ).values_list('template_id', flat=True)
-    
-    # Filter template yang belum dikerjakan
-    templates = EvaluasiTemplate.objects.filter(
+
+    # Filter template yang belum dikerjakan dan check periode
+    all_templates = EvaluasiTemplate.objects.filter(
         aktif=True
     ).exclude(id__in=completed_templates)
+
+    # Separate templates into available and unavailable based on period
+    available_templates = []
+    unavailable_templates = []
+    for template in all_templates:
+        if template.can_be_filled():
+            available_templates.append(template)
+        else:
+            unavailable_templates.append(template)
+
+    templates = available_templates
     
     # Pre-select template if provided in GET parameter (for quick-evaluate flow)
     selected_template_id = request.GET.get('template')
@@ -192,14 +212,19 @@ def evaluasi_mahasiswa(request, konfirmasi_id):
     if request.method == 'POST':
         template_id = request.POST.get('template_id')
         template = get_object_or_404(EvaluasiTemplate, id=template_id)
-        
+
+        # Validate that template can be filled (period check)
+        if not template.can_be_filled():
+            messages.error(request, f"Evaluasi {template.nama} tidak dapat diisi saat ini. {template.period_status_display()}.")
+            return redirect('jobs:evaluasi_mahasiswa', konfirmasi_id=konfirmasi_id)
+
         # Kumpulkan jawaban dari form
         jawaban = {}
         for key, value in request.POST.items():
             if key.startswith('jawaban_'):
                 question_index = key.replace('jawaban_', '')
                 jawaban[question_index] = value
-        
+
         # Simpan atau update evaluasi
         evaluasi, created = EvaluasiSupervisor.objects.get_or_create(
             konfirmasi=konfirmasi,
@@ -210,13 +235,13 @@ def evaluasi_mahasiswa(request, konfirmasi_id):
                 'submitted_at': timezone.now()
             }
         )
-        
+
         if not created:
             evaluasi.jawaban = jawaban
             evaluasi.status = 'completed'
             evaluasi.submitted_at = timezone.now()
             evaluasi.save()
-        
+
         messages.success(request, f"Evaluasi {template.nama} berhasil disimpan!")
         return redirect('jobs:supervisor_dashboard')
     
@@ -229,10 +254,11 @@ def evaluasi_mahasiswa(request, konfirmasi_id):
     context = {
         'konfirmasi': konfirmasi,
         'templates': templates,
+        'unavailable_templates': unavailable_templates,
         'completed_evaluations': completed_evaluations,
         'selected_template': selected_template,
     }
-    
+
     return render(request, "jobs/evaluasi_form.html", context)
 
 @login_required

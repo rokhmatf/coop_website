@@ -198,20 +198,29 @@
                 {% if evaluasi_list and evaluasi_list|length > 0 %}
                   {% for eval in evaluasi_list %}
                     <div class="col-md-6 mb-3">
-                      <div class="card evaluation-card evaluation-pending">
+                      <div class="card evaluation-card {% if eval.period_active %}evaluation-pending{% else %}evaluation-unavailable{% endif %}">
                         <div class="card-body">
                           <div class="d-flex justify-content-between align-items-start">
                             <div>
                               <h6 class="card-title">{{ eval.template.nama }} ({{ eval.template.get_jenis_display }})</h6>
                               <p class="text-muted small mb-2">{{ eval.konfirmasi.mahasiswa.get_full_name|default:eval.konfirmasi.mahasiswa.username }}</p>
                               <span class="badge bg-warning text-dark">{{ eval.get_status_display }}</span>
+                              {% if not eval.period_active %}
+                                <span class="badge bg-danger ms-1">{{ eval.period_status }}</span>
+                              {% endif %}
                             </div>
                             <div class="text-end">
                               <small class="text-muted">Dibuat: {{ eval.created_at|date:"d M Y" }}</small>
                               <br>
-                              <a href="{% url 'jobs:evaluasi_mahasiswa' eval.konfirmasi.id %}" class="btn btn-sm btn-warning mt-1">
-                                <i class="bi bi-pencil me-1"></i>Isi
-                              </a>
+                              {% if eval.period_active %}
+                                <a href="{% url 'jobs:evaluasi_mahasiswa' eval.konfirmasi.id %}" class="btn btn-sm btn-warning mt-1">
+                                  <i class="bi bi-pencil me-1"></i>Isi
+                                </a>
+                              {% else %}
+                                <button class="btn btn-sm btn-secondary mt-1" disabled>
+                                  <i class="bi bi-lock me-1"></i>Terkunci
+                                </button>
+                              {% endif %}
                             </div>
                           </div>
                         </div>
