@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+body {
+  margin: 0;
+  padding: 0;
+  background-image: url("assets/Gedung-Universitas-Prasetiya-Mulya-scaled.jpg");
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Poppins", sans-serif;
+}
+.bg-image {
+  background-color: rgba(255, 255, 255, 0.9); /* White with 90% opacity */
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+.btn-custom {
+  background-color: #2d9bea;
+  color: white;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.regis a {
+  text-decoration: none;
+  position: relative;
+  color: inherit;
+}
+
+.regis a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  height: 2px;
+  background: black;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 240ms cubic-bezier(.2,.8,.2,1);
+}
+.regis a:hover{
+  color: black;
+}
+
+.regis a:hover::after,
+.regis a:focus::after {
+  transform: scaleX(1);
+}
+
+.form-custom {
+  border: 2px solid #ced4da;
+  padding: 10px;
+  border-radius: 12px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-size: 1rem;
+}
+
+.form-custom:focus {
+  border-color: #2d9bea;
+  box-shadow: 0 0 5px rgba(45, 155, 234, 0.5);
+  outline: none;
+}
+
+label{
+  font-size: 1.1rem;
+}

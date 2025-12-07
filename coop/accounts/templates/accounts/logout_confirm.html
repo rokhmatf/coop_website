@@ -1,0 +1,135 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Konfirmasi Logout - Sistem Magang UTS</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+    <style>
+      .logout-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        max-width: 500px;
+        margin: auto;
+      }
+      
+      .logout-header {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+      }
+      
+      .logout-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.9;
+      }
+      
+      .btn-logout {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        border: none;
+        transition: all 0.3s ease;
+      }
+      
+      .btn-logout:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+      }
+      
+      .btn-cancel {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        border: none;
+        transition: all 0.3s ease;
+      }
+      
+      .btn-cancel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+      }
+    </style>
+  </head>
+  <body class="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+    <div class="logout-container">
+      <div class="logout-header">
+        <i class="bi bi-box-arrow-right logout-icon"></i>
+        <h2 class="mb-2">Konfirmasi Logout</h2>
+        <p class="mb-0 opacity-75">Apakah Anda yakin ingin keluar dari sistem?</p>
+      </div>
+      
+      <div class="p-4">
+        <div class="text-center mb-4">
+          <div class="d-flex align-items-center justify-content-center mb-3">
+            <div class="avatar-circle me-3">
+              <i class="bi bi-person-circle text-primary" style="font-size: 3rem;"></i>
+            </div>
+            <div class="text-start">
+              <h5 class="mb-1">{{ request.user.get_full_name|default:request.user.username }}</h5>
+              <p class="text-muted mb-0">
+                <i class="bi bi-shield-check me-1"></i>
+                {{ request.user.get_role_display }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Perhatian!</strong> Setelah logout, Anda harus login kembali untuk mengakses sistem.
+          </div>
+        </div>
+        
+        <form method="post" class="d-grid gap-2">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-lg btn-logout">
+            <i class="bi bi-box-arrow-right me-2"></i>
+            Ya, Logout Sekarang
+          </button>
+          <a href="javascript:history.back()" class="btn btn-secondary btn-lg btn-cancel">
+            <i class="bi bi-arrow-left me-2"></i>
+            Batal, Tetap Login
+          </a>
+        </form>
+        
+        <div class="text-center mt-3">
+          <small class="text-muted">
+            <i class="bi bi-clock me-1"></i>
+            Sesi akan berakhir otomatis dalam {{ session.get_expiry_age|floatformat:0 }} detik
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Auto-focus pada tombol logout
+      document.addEventListener('DOMContentLoaded', function() {
+        const logoutBtn = document.querySelector('.btn-logout');
+        if (logoutBtn) {
+          logoutBtn.focus();
+        }
+      });
+      
+      // Keyboard shortcuts
+      document.addEventListener('keydown', function(e) {
+        // Enter key untuk logout
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.querySelector('.btn-logout').click();
+        }
+        // Escape key untuk batal
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          history.back();
+        }
+      });
+    </script>
+  </body>
+</html>

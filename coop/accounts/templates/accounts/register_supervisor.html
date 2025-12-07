@@ -1,0 +1,273 @@
+{% extends 'coops/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block navbar_icon %}bi bi-person-plus-fill{% endblock %}
+
+{% block navbar_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'coops:status_magang' %}">Status Magang</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .supervisor-card {
+        transition: all 0.3s ease;
+    }
+    
+    .supervisor-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .avatar-circle {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+                    <div class="form-container">
+                        <div class="form-header">
+                            <h2 class="mb-2">
+                                <i class="bi bi-person-plus-fill me-2"></i>
+                                {{ title }}
+                            </h2>
+                            <p class="mb-0 opacity-75">Daftarkan supervisor baru untuk sistem evaluasi</p>
+                        </div>
+                        
+                        <div class="p-4">
+                            <div class="row">
+                                <!-- Form Registration -->
+                                <div class="col-md-6">
+                                    <h5 class="mb-3">
+                                        <i class="bi bi-person-plus me-2 text-primary"></i>
+                                        Daftar Supervisor Baru
+                                    </h5>
+                                    
+                                    <form method="post" class="needs-validation" novalidate>
+                                        {% csrf_token %}
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                                    {{ form.first_name.label }}
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                {{ form.first_name }}
+                                                {% if form.first_name.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.first_name.errors.0 }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                                    {{ form.last_name.label }}
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                {{ form.last_name }}
+                                                {% if form.last_name.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.last_name.errors.0 }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="{{ form.username.id_for_label }}" class="form-label">
+                                                {{ form.username.label }}
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.username }}
+                                            {% if form.username.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.username.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                                {{ form.email.label }}
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            {{ form.email }}
+                                            {% if form.email.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.email.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="{{ form.password.id_for_label }}" class="form-label">
+                                                    {{ form.password.label }}
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                {{ form.password }}
+                                                {% if form.password.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.password.errors.0 }}
+                                                    </div>
+                                                {% endif %}
+                                                <div class="form-text">{{ form.password.help_text }}</div>
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label for="{{ form.password_confirm.id_for_label }}" class="form-label">
+                                                    {{ form.password_confirm.label }}
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                {{ form.password_confirm }}
+                                                {% if form.password_confirm.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.password_confirm.errors.0 }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-primary btn-lg">
+                                                <i class="bi bi-person-plus me-2"></i>
+                                                Daftarkan Supervisor
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                
+                                <!-- List Supervisor yang sudah ada -->
+                                <div class="col-md-6">
+                                    <h5 class="mb-3">
+                                        <i class="bi bi-people me-2 text-info"></i>
+                                        Supervisor Terdaftar
+                                        <span class="badge bg-secondary">{{ supervisors.count }}</span>
+                                    </h5>
+                                    
+                                    {% if supervisors %}
+                                        <div class="list-group" style="max-height: 400px; overflow-y: auto;">
+                                            {% for supervisor in supervisors %}
+                                                <div class="list-group-item supervisor-card border-0 mb-2 rounded">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar-circle me-3">
+                                                            {{ supervisor.first_name|slice:":1"|upper }}{{ supervisor.last_name|slice:":1"|upper }}
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="mb-1 fw-bold">
+                                                                {{ supervisor.get_full_name|default:supervisor.username }}
+                                                            </h6>
+                                                            <p class="mb-1 text-muted small">
+                                                                <i class="bi bi-envelope me-1"></i>
+                                                                {{ supervisor.email }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <span class="badge bg-success">
+                                                                <i class="bi bi-check-circle"></i>
+                                                                Aktif
+                                                            </span>
+                                                            <div class="small text-muted mt-1">
+                                                                {{ supervisor.date_joined|date:"d M Y" }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center text-muted py-4">
+                                            <i class="bi bi-people" style="font-size: 3rem; opacity: 0.3;"></i>
+                                            <p class="mt-2 mb-0">Belum ada supervisor yang terdaftar</p>
+                                            <small>Daftarkan supervisor pertama menggunakan form di samping</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+
+    // Password confirmation validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const password = document.getElementById('id_password');
+        const passwordConfirm = document.getElementById('id_password_confirm');
+        
+        function validatePassword() {
+            if (password.value !== passwordConfirm.value) {
+                passwordConfirm.setCustomValidity('Password tidak cocok');
+            } else {
+                passwordConfirm.setCustomValidity('');
+            }
+        }
+        
+        password.addEventListener('change', validatePassword);
+        passwordConfirm.addEventListener('keyup', validatePassword);
+    });
+</script>
+{% endblock %}
