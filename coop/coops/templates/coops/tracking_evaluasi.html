@@ -206,9 +206,6 @@
                                         <button class="btn btn-success" onclick="downloadResults('{{ data.template.id }}')">
                                             <i class="bi bi-download me-1"></i>Download Hasil Evaluasi
                                         </button>
-                                        <button class="btn btn-info" onclick="sendToKaprodi('{{ data.template.id }}')">
-                                            <i class="bi bi-send me-1"></i>Kirim ke Kaprodi & Mentor
-                                        </button>
                                     {% else %}
                                         <button class="btn btn-warning" onclick="sendBulkReminder('{{ data.template.id }}')">
                                             <i class="bi bi-envelope-exclamation me-1"></i>Kirim Reminder Massal
@@ -264,26 +261,6 @@
         function downloadResults(templateId) {
             // Navigate to download endpoint
             alert('Fitur download akan diimplementasikan');
-        }
-
-        function sendToKaprodi(templateId) {
-            if (confirm('Kirim hasil evaluasi ke Kaprodi dan Mentor?')) {
-                // Create a form to submit POST request
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/coops/evaluasi/kirim-kaprodi/' + templateId + '/';
-                
-                // Add CSRF token
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = 'csrfmiddlewaretoken';
-                csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value || '{{ csrf_token }}';
-                form.appendChild(csrfInput);
-                
-                // Add form to document and submit
-                document.body.appendChild(form);
-                form.submit();
-            }
         }
 
         function sendBulkReminder(templateId) {

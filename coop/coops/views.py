@@ -7,12 +7,10 @@ from accounts.models import Mahasiswa, User
 from django.http import HttpResponse
 from django.template import loader
 from .forms import WeeklyReportForm
-from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from datetime import date, timedelta
 from .utils.supervisor_manager import create_supervisor_with_reset_link
-from .utils.email_sender import send_supervisor_welcome_email
 import logging
 
 logger = logging.getLogger(__name__)
@@ -77,43 +75,15 @@ def konfirmasi_magang(request):
 
                 if is_new:
                     is_new_supervisor = True
-                    reset_url = request.build_absolute_uri(
-                        f'/accounts/reset-password/{uidb64}/{token}/'
-                    )
-
-                    try:
-                        mahasiswa = request.user.mahasiswa
-                    except:
-                        mahasiswa = None
-
-                    mahasiswa_info = {
-                        'nama': mahasiswa.nama if mahasiswa else request.user.get_full_name(),
-                        'prodi': mahasiswa.prodi if mahasiswa else 'N/A',
-                        'periode_awal': periode_awal,
-                        'periode_akhir': periode_akhir,
-                        'posisi': posisi,
-                        'nama_perusahaan': nama_perusahaan,
-                    }
-
-                    success, error_msg = send_supervisor_welcome_email(
-                        supervisor_user=supervisor_user,
-                        reset_url=reset_url,
-                        mahasiswa_info=mahasiswa_info
-                    )
-
-                    if success:
-                        logger.info(f"Welcome email sent to {email_supervisor}")
-                        messages.success(request, f"Email dengan link setup password telah dikirim ke {email_supervisor}")
-                    else:
-                        logger.error(f"Failed to send email: {error_msg}")
-                        messages.warning(request, "Akun supervisor dibuat, namun email gagal terkirim. Admin akan menghubungi supervisor.")
+                    logger.info(f"New supervisor account created: {email_supervisor}")
+                    messages.success(request, f"Akun supervisor telah dibuat. Admin akan menghubungi supervisor untuk setup password.")
 
                     admin_users = User.objects.filter(role='admin')
                     for admin in admin_users:
                         Notification.objects.create(
                             user=admin,
                             title="Akun Supervisor Baru Dibuat",
-                            message=f"Supervisor {nama_supervisor} untuk mahasiswa {request.user.get_full_name()} di {nama_perusahaan}",
+                            message=f"Supervisor {nama_supervisor} ({email_supervisor}) untuk mahasiswa {request.user.get_full_name()} di {nama_perusahaan}. Harap hubungi supervisor untuk setup password.",
                             notification_type='info',
                             link='/accounts/register-supervisor/'
                         )
@@ -691,109 +661,6 @@ def laporan_mahasiswa(request):
     except KonfirmasiMagang.DoesNotExist:
         messages.warning(request, "Anda belum mengajukan konfirmasi magang.")
         return redirect('coops:mahasiswa_dashboard')
-
-
-@login_required
-def kirim_ke_kaprodi(request, template_id):
-    """View untuk admin mengirim hasil evaluasi ke Kaprodi dan Mentor"""
-    if request.user.role != "admin":
-        messages.error(request, "Akses ditolak. Anda bukan admin.")
-        return redirect("/")
-    
-    if request.method != 'POST':
-        messages.error(request, "Method tidak diizinkan.")
-        return redirect('coops:tracking_evaluasi')
-    
-    from .models import EvaluasiTemplate, EvaluasiSupervisor
-    from django.core.mail import send_mail
-    from django.template.loader import render_to_string
-    from django.utils.html import strip_tags
-    import json
-    
-    try:
-        template = EvaluasiTemplate.objects.get(id=template_id)
-    except EvaluasiTemplate.DoesNotExist:
-        messages.error(request, 'Template evaluasi tidak ditemukan.')
-        return redirect('coops:tracking_evaluasi')
-    
-    # Get all completed evaluations for this template
-    completed_evaluations = EvaluasiSupervisor.objects.filter(
-        template=template, 
-        status='completed'
-    ).select_related('konfirmasi__mahasiswa')
-    
-    if not completed_evaluations.exists():
-        messages.error(request, 'Tidak ada evaluasi yang sudah diselesaikan untuk template ini.')
-        return redirect('coops:tracking_evaluasi')
-    
-    # Prepare email content
-    try:
-        # Parse questions for better email formatting
-        questions = json.loads(template.pertanyaan) if template.pertanyaan else []
-        
-        # Prepare evaluation summary data
-        evaluation_summary = []
-        for evaluasi in completed_evaluations:
-            # Combine questions with answers
-            qa_pairs = []
-            for i, question in enumerate(questions):
-                answer = 'Tidak dijawab'
-                if evaluasi.jawaban:
-                    answer = evaluasi.jawaban.get(str(i)) or evaluasi.jawaban.get(i) or 'Tidak dijawab'
-                
-                qa_pairs.append({
-                    'question': question,
-                    'answer': answer
-                })
-            
-            evaluation_summary.append({
-                'mahasiswa': evaluasi.konfirmasi.mahasiswa,
-                'supervisor': evaluasi.konfirmasi.nama_supervisor,
-                'perusahaan': evaluasi.konfirmasi.nama_perusahaan,
-                'posisi': evaluasi.konfirmasi.posisi,
-                'submitted_at': evaluasi.submitted_at,
-                'qa_pairs': qa_pairs
-            })
-        
-        # Email context
-        email_context = {
-            'template': template,
-            'evaluation_summary': evaluation_summary,
-            'total_evaluations': completed_evaluations.count(),
-            'admin_user': request.user
-        }
-        
-        # Render email templates
-        subject = f'Hasil Evaluasi {template.get_jenis_display()} - {template.nama}'
-        html_message = render_to_string('coops/email_hasil_evaluasi.html', email_context)
-        plain_message = strip_tags(html_message)
-        
-        # Email addresses (you should configure these in settings or as admin preferences)
-        kaprodi_email = getattr(settings, 'KAPRODI_EMAIL', 'kaprodi@university.edu')
-        mentor_email = getattr(settings, 'MENTOR_EMAIL', 'mentor@university.edu')
-        
-        recipient_list = [kaprodi_email, mentor_email]
-        
-        # Send email
-        send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=recipient_list,
-            html_message=html_message,
-            fail_silently=False
-        )
-        
-        # Mark template as sent (you might want to add a field to track this)
-        # For now, we'll just show success message
-        messages.success(request, 
-            f'Hasil evaluasi {template.nama} berhasil dikirim ke Kaprodi dan Mentor. '
-            f'Total {completed_evaluations.count()} evaluasi telah dikirim.')
-        
-    except Exception as e:
-        messages.error(request, f'Gagal mengirim email: {str(e)}')
-    
-    return redirect('coops:tracking_evaluasi')
 
 
 @login_required

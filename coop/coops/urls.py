@@ -22,8 +22,7 @@ urlpatterns = [
     # Evaluasi Supervisor
     path("evaluasi/<int:konfirmasi_id>/<int:template_id>/", views.evaluasi_supervisor, name="evaluasi_supervisor"),
     path("evaluasi/hasil/<int:konfirmasi_id>/<int:template_id>/", views.hasil_evaluasi, name="hasil_evaluasi"),
-    path("evaluasi/kirim-kaprodi/<int:template_id>/", views.kirim_ke_kaprodi, name="kirim_ke_kaprodi"),
-    
+
     # Admin tracking
     path("tracking-evaluasi/", views.tracking_evaluasi, name="tracking_evaluasi"),
     

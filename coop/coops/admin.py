@@ -1,9 +1,8 @@
 from django.contrib import admin
 from .models import (
-    KonfirmasiMagang, WeeklyReport, DeadlineReminder, EvaluasiTemplate, 
+    KonfirmasiMagang, WeeklyReport, DeadlineReminder, EvaluasiTemplate,
     EvaluasiSupervisor, LaporanKemajuan, LaporanAkhir, SertifikatCoop
 )
-from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from django.http import HttpResponse
@@ -345,16 +344,3 @@ class SertifikatCoopAdmin(admin.ModelAdmin):
         
         return response
     download_certificate_report.short_description = "Download laporan sertifikat"
-
-
-def notify_kaprodi_mentor(modeladmin, request, queryset):
-    # Simple notification stub — in production you would look up kaprodi/mentor
-    # emails from settings or related models. We'll send to settings.DEFAULT_FROM_EMAIL
-    subject = 'Notifikasi: Mahasiswa belum mendapat tempat magang / laporan mingguan'
-    message = 'Mohon ditindaklanjuti: beberapa mahasiswa belum mengonfirmasi magang atau terlambat mengumpulkan laporan.'
-    recipient = [settings.DEFAULT_FROM_EMAIL]
-    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient)
-    modeladmin.message_user(request, 'Notifikasi dikirim ke kaprodi/mentor (stub).')
-
-
-KonfirmasiMagangAdmin.actions = [notify_kaprodi_mentor]
