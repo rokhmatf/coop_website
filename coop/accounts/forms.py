@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate
-from .models import User
+from .models import User, Kaprodi
 
 class CustomLoginForm(forms.Form):
     email = forms.EmailField(
@@ -124,4 +124,105 @@ class SupervisorRegistrationForm(forms.ModelForm):
         user.is_active = True
         if commit:
             user.save()
+        return user
+
+
+class KaprodiRegistrationForm(forms.ModelForm):
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Password untuk Kaprodi'
+        }),
+        label="Password",
+        help_text="Password minimal 8 karakter"
+    )
+    password_confirm = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Konfirmasi password'
+        }),
+        label="Konfirmasi Password"
+    )
+    nama = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nama lengkap Kaprodi'
+        }),
+        label="Nama Lengkap"
+    )
+    jurusan = forms.ChoiceField(
+        choices=Kaprodi.JURUSAN_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        }),
+        label="Jurusan"
+    )
+    no_hp = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nomor HP (opsional)'
+        }),
+        label="Nomor HP"
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Username untuk Kaprodi'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Email Kaprodi'
+            }),
+        }
+        labels = {
+            'username': 'Username',
+            'email': 'Email',
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Email sudah terdaftar.")
+        return email
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("Username sudah terdaftar.")
+        return username
+
+    def clean_password_confirm(self):
+        password = self.cleaned_data.get('password')
+        password_confirm = self.cleaned_data.get('password_confirm')
+
+        if password and password_confirm:
+            if password != password_confirm:
+                raise forms.ValidationError("Password tidak cocok.")
+        return password_confirm
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if len(password) < 8:
+            raise forms.ValidationError("Password minimal 8 karakter.")
+        return password
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        user.role = 'kaprodi'
+        user.is_active = True
+        if commit:
+            user.save()
+            Kaprodi.objects.create(
+                user=user,
+                nama=self.cleaned_data['nama'],
+                email=self.cleaned_data['email'],
+                jurusan=self.cleaned_data['jurusan'],
+                no_hp=self.cleaned_data.get('no_hp', '')
+            )
         return user

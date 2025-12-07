@@ -31,3 +31,7 @@ def admin_required(view_func):
 def supervisor_required(view_func):
     """Decorator khusus untuk view yang hanya bisa diakses supervisor"""
     return role_required('supervisor')(view_func)
+
+def kaprodi_required(view_func):
+    """Decorator khusus untuk view yang hanya bisa diakses kaprodi"""
+    return role_required('kaprodi')(view_func)

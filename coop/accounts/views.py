@@ -1,14 +1,14 @@
 from django.contrib.auth.views import LoginView
 from django.contrib.auth import login, logout
 from django.shortcuts import render, redirect
-from .models import User, Mahasiswa
-from .forms import CustomLoginForm, SupervisorRegistrationForm
+from .models import User, Mahasiswa, Kaprodi
+from .forms import CustomLoginForm, SupervisorRegistrationForm, KaprodiRegistrationForm
 from django.urls import reverse
 from django.contrib import messages
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.contrib.auth.decorators import login_required
-from .decorators import admin_required
+from .decorators import admin_required, kaprodi_required
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
@@ -31,13 +31,15 @@ class CustomLoginView(LoginView):
             return redirect(reverse("jobs:supervisor_dashboard"))
         elif user.role == "admin":
             return redirect(reverse("coops:status_magang"))
+        elif user.role == "kaprodi":
+            return redirect(reverse("accounts:kaprodi_dashboard"))
         return redirect("/")
 
     def form_invalid(self, form):
         return super().form_invalid(form)
 
 @login_required
-@admin_required    
+@admin_required
 def register_supervisor(request):
     if request.method == 'POST':
         form = SupervisorRegistrationForm(request.POST)
@@ -52,16 +54,44 @@ def register_supervisor(request):
             messages.error(request, 'Mohon perbaiki kesalahan pada form.')
     else:
         form = SupervisorRegistrationForm()
-    
+
     # Get list of existing supervisors
     supervisors = User.objects.filter(role='supervisor').order_by('-date_joined')
-    
+
     context = {
         'form': form,
         'supervisors': supervisors,
         'title': 'Registrasi Supervisor'
     }
     return render(request, 'accounts/register_supervisor.html', context)
+
+
+@login_required
+@admin_required
+def register_kaprodi(request):
+    if request.method == 'POST':
+        form = KaprodiRegistrationForm(request.POST)
+        if form.is_valid():
+            try:
+                kaprodi_user = form.save()
+                messages.success(request, f'Kaprodi {kaprodi_user.kaprodi_profile.nama} berhasil didaftarkan.')
+                return redirect('accounts:register_kaprodi')
+            except Exception as e:
+                messages.error(request, f'Terjadi kesalahan: {str(e)}')
+        else:
+            messages.error(request, 'Mohon perbaiki kesalahan pada form.')
+    else:
+        form = KaprodiRegistrationForm()
+
+    # Get list of existing kaprodi
+    kaprodis = Kaprodi.objects.all().order_by('-created_at')
+
+    context = {
+        'form': form,
+        'kaprodis': kaprodis,
+        'title': 'Registrasi Kaprodi'
+    }
+    return render(request, 'accounts/register_kaprodi.html', context)
     
 def register(request):
     if request.method == "POST":
@@ -207,3 +237,16 @@ def force_password_change(request):
         return redirect('/')
 
     return render(request, 'accounts/force_password_change.html')
+
+
+@login_required
+@kaprodi_required
+def kaprodi_dashboard(request):
+    """Temporary dashboard for Kaprodi"""
+    kaprodi = request.user.kaprodi_profile
+
+    context = {
+        'kaprodi': kaprodi,
+        'title': 'Dashboard Kaprodi'
+    }
+    return render(request, 'accounts/kaprodi_dashboard.html', context)

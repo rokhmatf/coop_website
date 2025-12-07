@@ -7,6 +7,7 @@ class User(AbstractUser):
         ('mahasiswa', 'Mahasiswa'),
         ('supervisor', 'Supervisor'),
         ('admin', 'Admin'),
+        ('kaprodi', 'Kaprodi'),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     must_change_password = models.BooleanField(default=False, verbose_name="Harus Ganti Password")
@@ -29,7 +30,41 @@ class User(AbstractUser):
         return None
 
 
+class Kaprodi(models.Model):
+    JURUSAN_CHOICES = (
+        ('BBA', 'Bachelor of Business Administration'),
+        ('BSBA', 'Bachelor of Science in Business Analytics'),
+        ('BSSE', 'Bachelor of Science in Software Engineering'),
+        ('BIE', 'Bachelor of Industrial Engineering'),
+    )
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='kaprodi_profile', verbose_name="User Account")
+    nama = models.CharField(max_length=100, verbose_name="Nama Lengkap")
+    email = models.EmailField(verbose_name="Email")
+    jurusan = models.CharField(max_length=10, choices=JURUSAN_CHOICES, verbose_name="Jurusan")
+    no_hp = models.CharField(max_length=15, blank=True, null=True, verbose_name="Nomor HP")
+
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Kaprodi"
+        verbose_name_plural = "Kaprodi"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.nama} - {self.get_jurusan_display()}"
+
+
 class Mahasiswa(models.Model):
+    JURUSAN_CHOICES = (
+        ('BBA', 'Bachelor of Business Administration'),
+        ('BSBA', 'Bachelor of Science in Business Analytics'),
+        ('BSSE', 'Bachelor of Science in Software Engineering'),
+        ('BIE', 'Bachelor of Industrial Engineering'),
+    )
+
+    jurusan = models.CharField(max_length=10, choices=JURUSAN_CHOICES, blank=True, null=True, verbose_name="Jurusan")
     nama = models.CharField(max_length=100, verbose_name="Nama Lengkap")
     nim = models.CharField(max_length=20, unique=True, verbose_name="NIM")
     prodi = models.CharField(max_length=100, verbose_name="Program Studi")

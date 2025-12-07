@@ -186,6 +186,13 @@ BRAND_SUCCESS_COLOR = '#28A745'
 BRAND_WARNING_COLOR = '#FFC107'
 BRAND_DANGER_COLOR = '#DC3545'
 
+# Feature Flags
+FEATURES = {
+    'KAPRODI_APPROVAL': os.getenv('FEATURE_KAPRODI_APPROVAL', 'False') == 'True',
+    'KAPRODI_NOTIFICATION': os.getenv('FEATURE_KAPRODI_NOTIFICATION', 'False') == 'True',
+    'KAPRODI_DASHBOARD': os.getenv('FEATURE_KAPRODI_DASHBOARD', 'False') == 'True',
+}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
